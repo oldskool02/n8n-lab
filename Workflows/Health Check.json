@@ -1,0 +1,112 @@
+{
+  "name": "Health Check",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "health",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -592,
+        -80
+      ],
+      "id": "19a796ca-ef45-48d4-b073-a962f80e25c7",
+      "name": "Webhook",
+      "webhookId": "6ec3a253-c6e0-4b42-abbb-f7d16858dd4e"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"ok\",\n  \"service\": \"n8n\",\n  \"mode\": \"queue\",\n  \"timestamp\": \"{{ $now }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -144,
+        -80
+      ],
+      "id": "61ae201b-8aaa-49be-baa9-5ac41cfd8888",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ec149271-79bf-43c5-83f5-c01475dd3dd2",
+              "name": "status",
+              "value": "ok",
+              "type": "string"
+            },
+            {
+              "id": "142a04db-2684-43f4-a7d8-05fc6088c341",
+              "name": "timestamp",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "ff713bf8-e61f-4e02-b861-06c737ae1bb1",
+              "name": "worker",
+              "value": "={{ execution.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -368,
+        -80
+      ],
+      "id": "06caae5b-ddf5-46bb-b3f0-a1988da1ef30",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "b4eb7b84-d7e0-4d21-b0eb-a5ec6ab4fb12",
+  "meta": {
+    "instanceId": "7cc022c7883e242651c99928a239e6fdb65950951ab30664250c1eeefc45294b"
+  },
+  "id": "tbDN0LVFbFw6GeXpou8Id",
+  "tags": []
+}

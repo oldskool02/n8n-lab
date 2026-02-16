@@ -1,0 +1,144 @@
+{
+  "name": "Clean Downloads",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "download-cleanup",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1de81e9f-eb59-4f1d-85cc-17b8d19dd86b",
+      "name": "Webhook",
+      "webhookId": "63ff47c0-22ec-44b0-ad27-71455f5b9601"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "79898946-6e35-4f2a-816e-118d4466f0c7",
+              "leftValue": "={{ $json.body.status }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "996cd7b5-d589-4385-84ef-28eaf43a39a1",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "ian@oldskool.co.za",
+        "subject": "✅ Downloads Cleanup Successful",
+        "message": "={{ $json.body.message }}\n\nItems moved: {{ $json.body.count }}\n\nTime: {{$now}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        -96
+      ],
+      "id": "b4748452-47af-478a-abfd-96cdd2d81c68",
+      "name": "Send a message",
+      "webhookId": "398f233c-9711-4428-9b71-b5bcde7de54d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "i6loJuDMUI0aJn5F",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "ian@oldskool.co.za",
+        "subject": "❌ Downloads Cleanup FAILED",
+        "message": "=🔴 FAILURE\n\n{{ $json.body.message }}\n\nTime: {{$now}}\n\nPlease investigate immediately.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        96
+      ],
+      "id": "82897a53-351b-406e-bc90-6be6046a1570",
+      "name": "Send a message1",
+      "webhookId": "d1dbfa56-1018-4a84-9947-87ba19902caa",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "i6loJuDMUI0aJn5F",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "b684ffa8-9a33-496f-af31-4ce0c7e0ddf8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7cc022c7883e242651c99928a239e6fdb65950951ab30664250c1eeefc45294b"
+  },
+  "id": "pk0bjCO4l77wKUfd6zPQL",
+  "tags": []
+}

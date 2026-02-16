@@ -1,0 +1,189 @@
+{
+  "name": "ChatGPT Version",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agent",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -496,
+        -48
+      ],
+      "id": "1b07f73a-0bab-4abd-a3c0-2eda21ab7282",
+      "name": "Webhook",
+      "webhookId": "05bf767c-3359-4d4f-a77e-5c01671bc85a",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2LxLVrwn9RpcmryM",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "488deb99-23f2-40b1-9e12-ad805107643c",
+              "name": "received_at",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "cf6263aa-101a-46bd-939e-f46367a56374",
+              "name": "agent_input",
+              "value": "={{ $json.body ?? $json }}",
+              "type": "object"
+            },
+            {
+              "id": "a9945bbb-f355-4421-9ad8-76a4b4a8c25b",
+              "name": "status",
+              "value": "ok",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -272,
+        -48
+      ],
+      "id": "c74ffd2a-f281-4914-bef3-89ba590ef410",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        304,
+        -48
+      ],
+      "id": "5bf005bd-aa64-447b-8691-984f3f452f89",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.agent_input }}",
+        "options": {
+          "systemMessage": "=You are an automation agent.\n\nYou receive JSON input from a webhook.\n\nReturn a concise JSON response with:\n- intent\n- summary\n- next_action "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -48,
+        -48
+      ],
+      "id": "cf3841da-3841-46a3-8555-17530d34b8b4",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -192,
+        160
+      ],
+      "id": "4fe5b420-4d87-4977-8a65-7b58e34e7647",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "I9fdheTt0Ds7nlEN",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "a88f7e1f-fcb3-400a-9f6e-be47d7b7fd6d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7cc022c7883e242651c99928a239e6fdb65950951ab30664250c1eeefc45294b"
+  },
+  "id": "J2PG-seF7Oduxzlilh9P7",
+  "tags": []
+}

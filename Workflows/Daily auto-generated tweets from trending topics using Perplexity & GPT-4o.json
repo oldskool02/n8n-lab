@@ -1,0 +1,209 @@
+{
+  "name": "Daily auto-generated tweets from trending topics using Perplexity & GPT-4o",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 12,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "id": "8d163c95-cdfc-4f46-b845-75e07050873d",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        368,
+        512
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"model\": \"sonar-pro\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"What are the most important or interesting developments from the last 24–48 hours in the [ENTER YOUR TOPIC OR INDUSTRY] space? Include key names, links, and short, high-signal summaries. Prioritize novelty, usefulness, and recency. Keep it concise and skip the fluff.\"\n    }\n  ]\n}\n\n",
+        "options": {}
+      },
+      "id": "4bd9e56d-eff2-4a32-9daa-2ce4925a0bc9",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        592,
+        512
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "chatgpt-4o-latest",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a sharp, human-sounding ghostwriter for high-signal Twitter thought leaders. Your job is to turn raw summaries into compelling tweets that *do not sound AI-generated*. Each tweet should feel like it came from a real person interpreting the data — with original insight, tone, and rhythm.\n\nAvoid generic phrases and obvious AI patterns. Vary sentence structure, include your own perspective or commentary, and add a touch of edge, humor, or curiosity when appropriate.\n\nUse human rhetorical devices like:\n- Open-ended questions\n- Unfinished thoughts\n- Bold claims\n- Contrarian takes\n- “Here’s the twist…” setups\n\nEach tweet should be designed to spark conversation** — end with a question, bold statement, or call for opinion.\n",
+              "role": "system"
+            },
+            {
+              "content": "=Here’s a summary of recent developments in n8n Automation industry. Rewrite it as 1 tweet in my voice: intelligent, confident, and human. Don’t just summarize — interpret.\n\nEach tweet should:\n- **only be about n8n automations or AI agents using n8n**\n- Be under 280 characters\n- Avoid sounding like ChatGPT wrote it\n- Include original commentary or interpretation\n- End the thread with a rhetorical hook, question, or challenge to invite replies\n\n{{ $json.choices[0].message.content }}\n"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "id": "c76949c3-cef2-4c69-88f4-19d4e25408f9",
+      "name": "OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        816,
+        512
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "I9fdheTt0Ds7nlEN",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.twitter.com/2/tweets",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "twitterOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"{{ $json.message.content.tweet }}\"\n}",
+        "options": {}
+      },
+      "id": "20bcd15f-da5a-448e-9ee4-d879bc65bd58",
+      "name": "HTTP Request1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1040,
+        272
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "Fn8SoAFJVVNWQ8Fe",
+          "name": "X account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "✅ Automated Daily Tweet Bot\nThis workflow pulls trending insights from Perplexity, summarizes them using OpenAI, and tweets the result.\n\n🧠 Workflow Steps:\nSchedule Trigger – Runs once per day.\n\nHTTP Request (Perplexity) – Pulls real-time insights from the web.\n\nOpenAI (GPT) – Summarizes & formats the insight as a tweet.\n\nHTTP Request (Twitter API) – Posts the tweet to X/Twitter.",
+        "height": 240,
+        "width": 620,
+        "color": 4
+      },
+      "id": "71509553-6eca-4d9b-92f4-3b1d1ec2b49b",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        368,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "sendTo": "ian@oldskool.co.za",
+        "subject": "n8n Automations",
+        "emailType": "text",
+        "message": "={{ $json.message.content.tweet }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1152,
+        512
+      ],
+      "id": "8881c5d6-f6a4-4773-9d23-8408a8b1d074",
+      "name": "Send a message",
+      "webhookId": "7f93d4a6-acf9-4f9a-b79c-ed2f591a159a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "i6loJuDMUI0aJn5F",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "availableInMCP": false
+  },
+  "versionId": "690a5a7f-d82f-4ea2-89b5-4a6bf3fe1050",
+  "meta": {
+    "templateId": "6981",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7cc022c7883e242651c99928a239e6fdb65950951ab30664250c1eeefc45294b"
+  },
+  "id": "wRLwVR9Z2Am7JBAL",
+  "tags": []
+}

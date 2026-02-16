@@ -1,0 +1,97 @@
+{
+  "name": "MS SQL Test",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "917445d5-aad3-4667-9b0b-17e66492ba05",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT [CategoryID]\n      ,[CategoryName]\n      ,[Description]\n      \n  FROM [NorthWind2022].[dbo].[Categories]\n  WHERE [CategoryID] = 1\n"
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "02818b5c-d9b6-427f-ae3a-fcd2281076e0",
+      "name": "Microsoft SQL",
+      "credentials": {
+        "microsoftSql": {
+          "id": "t4cNxXvLUIbHlaG3",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "ian@oldskool.co.za",
+        "subject": "Category",
+        "emailType": "text",
+        "message": "=Good day.\nYour quote as requested\n\nCategory ID:  {{ $json.CategoryID }}\nName: {{ $json.CategoryName }}\nDescription: {{ $json.Description }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "9761f04c-e0b1-4fcd-8661-c7c74d8eb805",
+      "name": "Send a message",
+      "webhookId": "12a6fa5c-26d7-4602-aeb4-d8f113107398",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "i6loJuDMUI0aJn5F",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "26c09327-573c-4d55-8c46-0fd5b2537df7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7cc022c7883e242651c99928a239e6fdb65950951ab30664250c1eeefc45294b"
+  },
+  "id": "VVi6AUmoGjpQx13jSvMPL",
+  "tags": []
+}
