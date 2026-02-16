@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - docker_postgres_data:/var/lib/postgresql/data
     networks:
       - n8n_internal
 
@@ -141,6 +141,7 @@ volumes:
     external: true
     name: docker_n8n_data
 
-  postgres_data:
+  docker_postgres_data:
+    external: true
   redis_data:
 
