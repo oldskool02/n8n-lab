@@ -1,4 +1,4 @@
-# n8n FX Alert Lab
+# n8n Lab
 
 Local project using:
 
@@ -14,3 +14,4 @@ docker compose up -d --build
 ## Stop
 
 docker compose down
+
