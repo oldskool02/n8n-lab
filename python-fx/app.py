@@ -98,10 +98,10 @@ def fx_update():
 
         cur.execute("""
             UPDATE fx_state
-            SET previous_rate = ?,
-                current_rate = ?,
-                last_updated = ?
-            WHERE pair = ?
+            SET previous_rate = %s
+                current_rate = %s,
+                last_updated = %s
+            WHERE pair = %s
         """, (previous_rate, current_rate, timestamp, pair))
 
     conn.commit()
