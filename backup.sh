@@ -29,10 +29,10 @@ mkdir -p "$WORK_DIR" || die "Failed to create backup directory"
 
 log "🔹 Backing up config files"
 
-cp /mnt/d/n8n/docker/.env "$WORK_DIR/" || die ".env not found"
-cp /mnt/d/n8n/docker/docker-compose.yml "$WORK_DIR/" || die "docker-compose.yml not found"
-cp /mnt/d/n8n/docker/config.yml "$WORK_DIR/" || die "config.yml not found"
-cp /mnt/d/n8n/docker/cloudflared-config.yml "$WORK_DIR/" 2>/dev/null || log "ℹ️ cloudflared config not present (ok)"
+cp /mnt/d/n8n/n8n-lab/.env "$WORK_DIR/" || die ".env not found"
+cp /mnt/d/n8n/n8n-lab/docker-compose.yml "$WORK_DIR/" || die "docker-compose.yml not found"
+cp /mnt/d/n8n/n8n-lab/config.yml "$WORK_DIR/" || die "config.yml not found"
+cp /mnt/d/n8n/n8n-lab/cloudflared-config.yml "$WORK_DIR/" 2>/dev/null || log "ℹ️ cloudflared config not present (ok)"
 
 # --------------------------------------------------
 # Postgres
@@ -40,8 +40,17 @@ cp /mnt/d/n8n/docker/cloudflared-config.yml "$WORK_DIR/" 2>/dev/null || log "ℹ
 
 log "🔹 Backing up Postgres"
 
-docker exec docker-postgres-1 pg_dump -U n8n n8n > "$WORK_DIR/postgres.sql" \
-  || die "Postgres backup failed"
+docker exec n8n-lab-postgres-1 \
+  pg_dump -U n8n \
+  -F c \
+  -Z 9 \
+  --no-owner \
+  --no-privileges \
+  n8n \
+  > "$WORK_DIR/postgres.dump" \
+  || die "Postgres dump failed"
+
+[ -s "$WORK_DIR/postgres.dump" ] || die "Postgres dump empty"
 
 # --------------------------------------------------
 # Redis
@@ -49,10 +58,10 @@ docker exec docker-postgres-1 pg_dump -U n8n n8n > "$WORK_DIR/postgres.sql" \
 
 log "🔹 Backing up Redis"
 
-docker exec docker-redis-1 redis-cli SAVE \
+docker exec n8n-lab-redis-1 redis-cli SAVE \
   || die "Redis SAVE failed"
 
-docker cp docker-redis-1:/data/dump.rdb "$WORK_DIR/redis.rdb" \
+docker cp n8n-lab-redis-1:/data/dump.rdb "$WORK_DIR/redis.rdb" \
   || die "Failed to copy Redis dump"
 
 # --------------------------------------------------

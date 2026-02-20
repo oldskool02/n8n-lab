@@ -14,7 +14,7 @@ cleanup() {
 
 trap cleanup EXIT INT TERM
 
-if ! docker ps --format '{{.Names}}' | grep -q '^docker-n8n-1$'; then
+if ! docker ps --format '{{.Names}}' | grep -q '^n8n-lab-n8n-1$'; then
   die "Production n8n container not running — aborting verification"
 fi
 
@@ -24,7 +24,7 @@ log() {
 
 die() {
   log "❌ ERROR: $1"
-  /mnt/d/n8n/docker/alert-telegram.sh "❌ Backup restore verification FAILED on $(hostname): $1"
+  /mnt/d/n8n/n8n-lab/alert-telegram.sh "❌ Backup restore verification FAILED on $(hostname): $1"
   exit 1
 }
 
