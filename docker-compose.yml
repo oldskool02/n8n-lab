@@ -140,26 +140,41 @@ services:
     networks:
       - n8n_internal
       
-  doc-service:
-    build: ./doc-service
-    container_name: n8n-lab-doc-service-1
+  doc-engine:
+    build: ./doc-engine
+    container_name: doc-engine
     restart: unless-stopped
-    ports:
-      - "5001:5001"
-    volumes:
-      - /mnt/d/documents/legal:/documents
-    environment:
-      - DB_HOST=postgres
-      - DB_NAME=${POSTGRES_DB}
-      - DB_USER=${POSTGRES_USER}
-      - DB_PASSWORD=${POSTGRES_PASSWORD}
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
-      - OLLAMA_MODEL=${OLLAMA_MODEL}
-    networks:
-      - n8n_internal
     depends_on:
       - postgres
+    environment:
+      DB_HOST: postgres
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      GOOGLE_SERVICE_ACCOUNT_FILE: /app/credentials/service-account.json
+    volumes:
+      - ./doc-engine:/app
+      - ./credentials:/app/credentials
+    networks:
+      - n8n_internal
+    ports:
+      - "8000:8000"
 
+  chat-backend:
+    build: ./chat-backend
+    container_name: n8n-lab-chat-backend
+    restart: unless-stopped
+    depends_on:
+      - n8n
+      - postgres
+    networks:
+      - n8n_internal
+    environment:
+      DB_HOST: postgres
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+    
 networks:
   n8n_internal:
     driver: bridge
