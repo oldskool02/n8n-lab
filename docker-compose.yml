@@ -169,11 +169,23 @@ services:
       - postgres
     networks:
       - n8n_internal
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./chat-backend:/app
     environment:
       DB_HOST: postgres
       DB_NAME: ${POSTGRES_DB}
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
     
 networks:
   n8n_internal:
@@ -183,4 +195,5 @@ volumes:
   n8n_data:
   postgres_data:
   redis_data:
+  ollama:
 

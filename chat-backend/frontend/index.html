@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AI Recipe Assistant</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family:system-ui, Arial;
+    background:#f3f4f6;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    padding:30px;
+}
+
+.layout{
+    display:grid;
+    grid-template-columns:250px 1fr;
+    gap:20px;
+}
+
+.sidebar{
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+
+.main{
+    display:flex;
+    flex-direction:column;
+}
+
+.chat-window{
+    background:white;
+    border-radius:10px;
+    padding:20px;
+    height:420px;
+    overflow-y:auto;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom:10px;
+}
+
+.recipe-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+.chat-window{
+    background:white;
+    border-radius:10px;
+    padding:20px;
+    min-height:300px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom:20px;
+}
+
+.message{
+    margin-bottom:15px;
+}
+
+.user{
+    text-align:right;
+}
+
+.user .bubble{
+    background:#4f46e5;
+    color:white;
+}
+
+.ai .bubble{
+    background:#e5e7eb;
+}
+
+.bubble{
+    display:inline-block;
+    padding:12px 14px;
+    border-radius:10px;
+    max-width:70%;
+}
+
+.input-bar{
+    display:flex;
+    gap:10px;
+}
+
+.input-bar input{
+    flex:1;
+    padding:12px;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+
+.input-bar button{
+    background:#4f46e5;
+    color:white;
+    border:none;
+    padding:12px 18px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.input-bar button:hover{
+    background:#4338ca;
+}
+
+.recipe-card{
+    margin-top:15px;
+}
+
+.recipe-title{
+    font-size:20px;
+    font-weight:600;
+    margin-bottom:10px;
+}
+
+.section-title{
+    font-weight:600;
+    margin-top:10px;
+}
+
+.saved{
+    margin-top:30px;
+}
+
+.recipe-list{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+    gap:10px;
+}
+
+.recipe-item{
+    background:white;
+    padding:10px;
+    border-radius:6px;
+    cursor:pointer;
+    box-shadow:0 1px 4px rgba(0,0,0,0.1);
+}
+
+.recipe-item:hover{
+    background:#eef2ff;
+}
+
+.loader{
+    width:20px;
+    height:20px;
+    border:3px solid #ddd;
+    border-top:3px solid #4f46e5;
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+}
+
+.recipe-item.active{
+    background:#e0e7ff;
+    font-weight:600;
+}
+
+@keyframes spin{
+    100%{transform:rotate(360deg)}
+}
+
+.recipe-card img{
+    object-fit:cover;
+    max-height:300px;
+}
+
+/* Skeleton loading */
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        #e5e7eb 25%,
+        #f3f4f6 37%,
+        #e5e7eb 63%
+    );
+    background-size: 400% 100%;
+    animation: skeleton-loading 1.4s ease infinite;
+    border-radius:6px;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position:100% 50% }
+    100% { background-position:0 50% }
+}
+
+.skeleton-title{
+    height:22px;
+    width:60%;
+    margin-bottom:12px;
+}
+
+.skeleton-line{
+    height:14px;
+    margin:6px 0;
+}
+
+.skeleton-image{
+    height:200px;
+    margin:10px 0;
+    border-radius:8px;
+}
+
+.cursor{
+    display:inline-block;
+    width:8px;
+    background:#111;
+    margin-left:3px;
+    animation:blink 1s infinite;
+}
+
+@keyframes blink{
+    0%{opacity:0}
+    50%{opacity:1}
+    100%{opacity:0}
+}
+
+.recipe-item.active{
+    background:#c7d2fe;
+    border:1px solid #6366f1;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🍳 AI Recipe Assistant</h1>
+
+<div class="layout">
+
+    <div class="sidebar">
+
+        <h2>Saved Recipes</h2>
+        <div id="recipes" class="recipe-list"></div>
+
+    </div>
+
+    <div class="main">
+
+        <div id="viewer" class="chat-window"></div>
+
+        <div class="input-bar">
+            <input id="message" placeholder="Ask for a recipe...">
+            <button onclick="send()">Generate</button>
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    const input = document.getElementById("message");
+
+    input.focus();
+
+    
+    input.addEventListener("keypress", function(e){
+        if(e.key === "Enter"){
+            send();
+        }
+    });
+
+});
+
+function showRecipeSkeleton(){
+
+    const viewer = document.getElementById("viewer");
+
+    viewer.innerHTML = `
+        <div class="message ai">
+            <div class="bubble">
+
+                <div class="skeleton skeleton-title"></div>
+
+                <div class="skeleton skeleton-image"></div>
+
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line"></div>
+
+                <br>
+
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line"></div>
+
+            </div>
+        </div>
+    `;
+}
+
+function addUserMessage(text){
+
+    const viewer = document.getElementById("viewer");
+
+    viewer.innerHTML = `
+        <div class="message user">
+            <div class="bubble">${text}</div>
+        </div>
+    `;
+}
+
+function addLoader(){
+
+    const viewer = document.getElementById("viewer");
+
+    viewer.innerHTML = `
+    <div class="message ai" id="loader">
+        <div class="bubble"><div class="loader"></div></div>
+    </div>
+    `;
+}
+
+function removeLoader(){
+    const loader = document.getElementById("loader");
+    if(loader) loader.remove();
+}
+
+function renderRecipe(recipe){
+
+    const ingredients = recipe.ingredients
+        .map(i=>`<li>${i}</li>`).join("");
+
+    const steps = recipe.instructions
+        .map(i=>`<li>${i}</li>`).join("");
+
+    const imageUrl =
+        `https://picsum.photos/seed/${encodeURIComponent(recipe.title)}/800/400`;
+
+    return `
+    <div class="recipe-card">
+
+        <div class="recipe-title">
+            ${recipe.title}
+            <button onclick="deleteRecipe(${recipe.id})"
+                style="float:right;background:#ef4444;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer">
+                Delete
+            </button>
+        </div>
+
+        <img src="${imageUrl}"
+             style="width:100%;border-radius:8px;margin:10px 0">
+
+        <div class="section-title">Ingredients</div>
+        <ul>${ingredients}</ul>
+
+        <div class="section-title">Instructions</div>
+        <ol>${steps}</ol>
+
+    </div>
+    `;
+}
+
+async function deleteRecipe(id){
+
+    if(!confirm("Delete this recipe?")) return;
+
+    const res = await fetch(`/recipes/${id}`,{
+        method:"DELETE"
+    });
+
+    if(!res.ok){
+        alert("Delete failed");
+        return;
+    }
+
+    // CLEAR VIEWER
+    document.getElementById("viewer").innerHTML =
+        `<div class="message ai"><div class="bubble">Recipe deleted.</div></div>`;
+
+    // REMOVE ACTIVE HIGHLIGHT
+    document.querySelectorAll(".recipe-item")
+        .forEach(e=>e.classList.remove("active"));
+
+    // RELOAD SIDEBAR
+    loadRecipes();
+}
+
+function addAIMessage(recipe){
+
+    const viewer = document.getElementById("viewer");
+
+    viewer.innerHTML = `
+        <div class="message ai">
+            ${renderRecipe(recipe)}
+        </div>
+    `;
+
+}
+
+async function send(){
+
+    const messageInput = document.getElementById("message");
+    const message = messageInput.value.trim();
+
+    if(!message) return;
+
+    addUserMessage(message);
+    messageInput.value="";
+
+    const viewer = document.getElementById("viewer");
+
+    viewer.innerHTML = `
+        <div class="message ai">
+            <div class="bubble">
+                <div class="loader"></div>
+            </div>
+        </div>
+    `;
+
+    try{
+
+        const res = await fetch("https://oldskooln8n.xyz/webhook/agent",{
+            method:"POST",
+            headers:{ "Content-Type":"application/json"},
+            body: JSON.stringify({ message: message })
+        });
+        
+        const data = await res.json();
+        // Refresh sidebar
+        await loadRecipes();
+
+        // get latest recipe
+        const resRecipes = await fetch("/recipes");
+        const recipes = await resRecipes.json();
+
+        // assume newest recipe is last
+        const latestRecipe = recipes[recipes.length - 1];
+
+        // reload sidebar with highlight
+        await loadRecipes(latestRecipe.id);
+
+        // display recipe card
+        addAIMessage(latestRecipe);
+        
+        
+    }catch(err){
+
+        viewer.innerHTML = `
+            <div class="message ai">
+                <div class="bubble">Something went wrong.</div>
+            </div>
+        `;
+
+    }
+
+}
+
+function showRecipeSkeleton(container){
+
+    container.innerHTML = `
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-image"></div>
+
+        <div class="skeleton skeleton-line"></div>
+        <div class="skeleton skeleton-line"></div>
+        <div class="skeleton skeleton-line"></div>
+
+        <br>
+
+        <div class="skeleton skeleton-line"></div>
+        <div class="skeleton skeleton-line"></div>
+        <div class="skeleton skeleton-line"></div>
+    `;
+}
+
+async function loadRecipes(activeId=null){
+
+    const res = await fetch("/recipes");
+    const recipes = await res.json();
+
+    const list = document.getElementById("recipes");
+    list.innerHTML="";
+
+    recipes.forEach(r=>{
+
+        const div = document.createElement("div");
+
+        div.className="recipe-item";
+        div.innerText=r.title;
+
+        if(activeId && r.id === activeId){
+            div.classList.add("active");
+        }
+
+        div.onclick=()=>{
+
+            document.querySelectorAll(".recipe-item")
+                .forEach(i=>i.classList.remove("active"));
+
+            div.classList.add("active");
+
+            showRecipe(r.id);
+        };
+
+        list.appendChild(div);
+
+    });
+
+}
+
+async function showRecipe(id){
+
+    const res = await fetch(`/recipes/${id}`);
+    const recipe = await res.json();
+
+    addAIMessage(recipe);
+
+}
+
+loadRecipes();
+
+</script>
+
+</body>
+</html>

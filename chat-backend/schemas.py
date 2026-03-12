@@ -6,9 +6,10 @@ from datetime import datetime
 
 
 class RecipeCreate(BaseModel):
+    user_id: str
     title: str = Field(..., min_length=1, max_length=200)
-    ingredients: List[str]
-    instructions: List[str]
+    ingredients: List[str] = Field(..., min_length=1)
+    instructions: List[str] = Field(..., min_length=1)
 
     @field_validator("title")
     @classmethod
@@ -16,7 +17,7 @@ class RecipeCreate(BaseModel):
         v = v.strip()
         if not v:
             raise ValueError("Title cannot be empty")
-        return v
+        return v.title()
 
     @field_validator("ingredients", "instructions")
     @classmethod
@@ -36,6 +37,7 @@ class RecipeCreate(BaseModel):
 
 class RecipeOut(BaseModel):
     id: int
+    user_id: str
     title: str
     ingredients: List[str]
     instructions: List[str]
@@ -43,9 +45,11 @@ class RecipeOut(BaseModel):
 
 
 class RecipeUpdate(BaseModel):
-    title: str | None = None
-    ingredients: List[str] | None = None
-    instructions: List[str] | None = None
+    user_id: str
+    title: str
+    ingredients: List[str]
+    instructions: List[str]
 
 class RecipeGenerate(BaseModel):
     prompt: str
+    user_id: str
