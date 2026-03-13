@@ -15,3 +15,10 @@ docker compose up -d --build
 
 docker compose down
 
+### Setup Environment
+
+Copy the example environment file:
+
+cp .env.example .env
+
+Then edit `.env` and replace the placeholder values with secure credentials.

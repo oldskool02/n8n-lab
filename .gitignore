@@ -1,26 +1,75 @@
 # -----------------
+
 # Secrets
+
 # -----------------
+
 .env
 .env.*
+!.env.example
+
 cloudflared/*.json
 
 # -----------------
-# Python
-# -----------------
-__pycache__/
-*.pyc
-*.pyo
-*.db
+
+# Docker runtime / volumes
 
 # -----------------
-# OS
+
+postgres_data/
+redis_data/
+n8n_data/
+ollama-models/
+*.pid
+
 # -----------------
+
+# n8n
+
+# -----------------
+
+.n8n/
+*.log
+logs/
+
+# -----------------
+
+# Python
+
+# -----------------
+
+**pycache**/
+*.pyc
+*.pyo
+*.pyd
+*.db
+.venv/
+venv/
+
+# -----------------
+
+# OS
+
+# -----------------
+
 .DS_Store
 Thumbs.db
 
 # -----------------
+
 # IDE
+
 # -----------------
+
 .vscode/
 .idea/
+
+# -----------------
+
+# Temporary
+
+# -----------------
+
+*.tmp
+*.swp
+*~
