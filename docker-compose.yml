@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -75,8 +75,8 @@ services:
       
     volumes:
       - n8n_data:/home/node/.n8n
-      - "/mnt/c/Users/ianw/Downloads:/source"
-      - "/mnt/d/downloads:/destination"
+      - "/home/ianw/storage/source:/source"
+      - "/home/ianw/storage/destination:/destination"
 
     networks:
       - n8n_internal
@@ -184,8 +184,14 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - ollama:/root/.ollama
-    restart: unless-stopped
+      - /home/ianw/ollama-models:/root/.ollama
+    environment:
+      - OLLAMA_NUM_PARALLEL=4
+      - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_KEEP_ALIVE=5m
+    networks:
+      - n8n_internal
+    restart: unless-stopped    
     
 networks:
   n8n_internal:
@@ -195,5 +201,3 @@ volumes:
   n8n_data:
   postgres_data:
   redis_data:
-  ollama:
-
