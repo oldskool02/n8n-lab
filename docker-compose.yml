@@ -2,10 +2,12 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     restart: unless-stopped
+    secrets:
+      - postgres_password
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
     ports:
       - "5433:5432"
     volumes:
@@ -34,6 +36,9 @@ services:
     depends_on:
       - postgres
       - redis
+    secrets:
+      - n8n_encryption_key
+
     environment:
       NODE_ENV: production
       GENERIC_TIMEZONE: Africa/Johannesburg
@@ -56,6 +61,7 @@ services:
       N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
       N8N_COMMUNITY_PACKAGES_ENABLED: "true"
       N8N_CUSTOM_EXTENSIONS: /home/node/.n8n
+      N8N_ENCRYPTION_KEY_FILE: /run/secrets/n8n_encryption_key
       
       EXECUTIONS_DATA_SAVE_ON_SUCCESS: none
       EXECUTIONS_DATA_SAVE_ON_ERROR: all
@@ -105,6 +111,8 @@ services:
       - postgres
       - redis
     command: worker
+    secrets:
+      - n8n_encryption_key
     environment:
       NODE_ENV: production
       GENERIC_TIMEZONE: Africa/Johannesburg
@@ -118,13 +126,12 @@ services:
       
       N8N_COMMUNITY_PACKAGES_ENABLED: "true"
       N8N_CUSTOM_EXTENSIONS: /home/node/.n8n
+      N8N_ENCRYPTION_KEY_FILE: /run/secrets/n8n_encryption_key
 
       EXECUTIONS_MODE: queue
       QUEUE_BULL_REDIS_HOST: redis
       QUEUE_BULL_REDIS_PORT: 6379
       QUEUE_BULL_PREFIX: n8n
-
-      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
 
     volumes:
       - n8n_data:/home/node/.n8n
@@ -146,15 +153,16 @@ services:
     restart: unless-stopped
     depends_on:
       - postgres
+    secrets:
+      - google_service_account
     environment:
       DB_HOST: postgres
       DB_NAME: ${POSTGRES_DB}
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
-      GOOGLE_SERVICE_ACCOUNT_FILE: /app/credentials/service-account.json
+      GOOGLE_SERVICE_ACCOUNT_FILE: /run/secrets/google_service_account
     volumes:
       - ./doc-engine:/app
-      - /home/ianw/docker/secrets:/app/credentials
     networks:
       - n8n_internal
     ports:
@@ -201,3 +209,13 @@ volumes:
   n8n_data:
   postgres_data:
   redis_data:
+
+secrets:
+  postgres_password:
+    file: /home/ianw/docker/secrets/postgres_password
+
+  n8n_encryption_key:
+    file: /home/ianw/docker/secrets/n8n_encryption_key
+
+  google_service_account:
+    file: /home/ianw/docker/secrets/service-account.json
