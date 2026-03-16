@@ -73,3 +73,6 @@ Thumbs.db
 *.tmp
 *.swp
 *~
+
+# Credentials and secrets
+doc-engine/credentials/
