@@ -154,7 +154,7 @@ services:
       GOOGLE_SERVICE_ACCOUNT_FILE: /app/credentials/service-account.json
     volumes:
       - ./doc-engine:/app
-      - ./credentials:/app/credentials
+      - /home/ianw/docker/secrets:/app/credentials
     networks:
       - n8n_internal
     ports:
