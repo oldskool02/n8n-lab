@@ -146,7 +146,6 @@ services:
       - ./cloudflared:/etc/cloudflared
     networks:
       - n8n_internal
-      
   doc-engine:
     build: ./doc-engine
     container_name: doc-engine
@@ -186,6 +185,31 @@ services:
       DB_NAME: ${POSTGRES_DB}
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
+  crm-backend:
+    build: ./crm-backend
+    ports:
+      - "8002:8002"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/crm
+      UPLOAD_FOLDER: /data/crm_documents
+    volumes:
+      - ./crm-backend:/app
+      - crm_documents:/data/crm_documents
+    networks:
+      - n8n_internal
+    depends_on:
+      - postgres
+
+  crm-doc-engine:
+    build:
+      context: ./crm-doc-engine
+    ports:
+      - "8003:8003"
+    networks:
+      - n8n_internal
+    depends_on:
+      - ollama
+
   ollama:
     image: ollama/ollama
     container_name: ollama
@@ -209,6 +233,7 @@ volumes:
   n8n_data:
   postgres_data:
   redis_data:
+  crm_documents:
 
 secrets:
   postgres_password:
