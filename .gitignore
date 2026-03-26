@@ -76,3 +76,6 @@ Thumbs.db
 
 # Credentials and secrets
 doc-engine/credentials/
+
+# Test files
+test.txt
