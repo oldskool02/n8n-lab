@@ -11,13 +11,22 @@ app = Flask(__name__)
 # -----------------------------
 # Database helpers
 # -----------------------------
+def get_secret(env_var, file_var):
+    import os
+    if file_var in os.environ:
+        try:
+            with open(os.environ[file_var], "r") as f:
+                return f.read().strip()
+        except Exception:
+            pass
+    return os.getenv(env_var)
 
 def get_db():
     return psycopg2.connect(
         host=os.environ["DB_HOST"],
         dbname=os.environ["DB_NAME"],
         user=os.environ["DB_USER"],
-        password=os.environ["DB_PASSWORD"]
+        password=get_secret("DB_PASSWORD", "DB_PASSWORD_FILE")
     )
 
 def init_db():
@@ -122,7 +131,9 @@ def fx_update():
 # Startup
 # -----------------------------
 
+# Run init regardless of server
+os.makedirs("/app/data", exist_ok=True)
+init_db()
+
 if __name__ == "__main__":
-    os.makedirs("/app/data", exist_ok=True)
-    init_db()
     app.run(host="0.0.0.0", port=5000)

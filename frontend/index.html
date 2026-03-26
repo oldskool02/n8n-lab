@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CRM Dashboard</title>
+  <style>
+    body { font-family: Arial; display: flex; }
+    #list { width: 40%; border-right: 1px solid #ccc; padding: 10px; }
+    #detail { width: 60%; padding: 10px; }
+    .item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+    .item:hover { background: #f5f5f5; }
+    #login { margin: auto; }
+    .late {
+    background: #ffe5e5;
+    border-left: 4px solid red;
+    }
+
+    .late strong {
+    color: #b30000;
+    }
+
+    .badge {
+    display: inline-block;
+    background: red;
+    color: white;
+    padding: 2px 6px;
+    font-size: 10px;
+    margin-left: 6px;
+    border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="login">
+  <h2>Login</h2>
+  <input id="email" placeholder="Email"><br><br>
+  <input id="password" type="password" placeholder="Password"><br><br>
+  <button onclick="login()">Login</button>
+</div>
+
+<div id="app" style="display:none; width:100%;">
+  <button onclick="logout()" style="position:absolute; top:10px; right:10px;">
+    Logout
+  </button>
+
+  <div id="list">
+    <h3>Follow-ups</h3>
+    <div id="items"></div>
+  </div>
+
+  <div id="detail">
+    <h3>Interaction</h3>
+    <div id="content">Select an interaction</div>
+  </div>
+</div>
+
+<script>
+console.log("Script loaded");
+const API = "http://localhost:8002";
+let TOKEN = localStorage.getItem("token");
+
+// Auto-login if token exists
+// if (TOKEN) {
+//   showApp();
+// }
+
+// 🔐 LOGIN
+async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const formData = new URLSearchParams();
+  formData.append("username", email);
+  formData.append("password", password);
+
+  const res = await fetch(`${API}/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: formData
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.detail || "Login failed");
+    return;
+  }
+
+  // ✅ Save token
+  localStorage.setItem("token", data.access_token);
+
+  // ✅ IMPORTANT: update TOKEN variable
+  TOKEN = data.access_token;
+
+  // ✅ Show app
+  showApp();
+}
+
+// Show dashboard
+function showApp() {
+  console.log("Token", TOKEN)
+  document.getElementById("login").style.display = "none";
+  document.getElementById("app").style.display = "flex";
+  loadList();
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+
+  return date.toLocaleString("en-ZA", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+// Load follow-ups
+async function loadList() {
+  if (!TOKEN) {
+    logout();
+    return;
+  }
+
+  const res = await fetch(`${API}/interactions/my-follow-ups`, {
+    headers: { Authorization: `Bearer ${TOKEN}` }
+  });
+
+  // ✅ Handle expired/invalid token
+  if (res.status === 401) {
+    logout();
+    return;
+  }
+
+  const data = await res.json();
+  const container = document.getElementById("items");
+
+  container.innerHTML = "";
+
+  // ✅ Prevent crash if backend returns error object instead of array
+  if (!Array.isArray(data)) {
+    console.error("Unexpected response:", data);
+    container.innerHTML = "<p>Error loading follow-ups</p>";
+    return;
+  }
+
+  data.sort((a, b) => {
+    if (a.is_late && !b.is_late) return -1;
+    if (!a.is_late && b.is_late) return 1;
+    return new Date(a.follow_up_date) - new Date(b.follow_up_date);
+  });
+
+  data.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "item";
+
+    // ✅ Apply overdue styling
+    if (item.is_late) {
+        div.classList.add("late");
+    }
+
+    // ✅ Content
+    div.innerHTML = `
+      <strong>
+       ${item.account_name}
+       ${item.is_late ? '<span class="badge">OVERDUE</span>' : ''}
+      </strong><br>
+       ${item.notes}<br>
+      <small>Due: ${formatDate(item.follow_up_date)}</small>
+    `;
+
+    // ✅ Click handler
+    div.onclick = () => loadDetail(item.id);
+
+    container.appendChild(div);
+  });
+}
+
+// Load interaction
+async function loadDetail(id) {
+  const res = await fetch(`${API}/interactions/${id}`, {
+    headers: { Authorization: `Bearer ${TOKEN}` }
+  });
+
+  const data = await res.json();
+
+  document.getElementById("content").innerHTML = `
+    <h4>${data.account_name}</h4>
+    <p><strong>Contact:</strong> ${data.contact_name}</p>
+    <p>${data.notes}</p>
+    <p>Status: ${data.status}</p>
+    <p><strong>Due:</strong> ${formatDate(data.follow_up_date)}</p>
+
+    <button onclick="start('${data.id}')">Start</button>
+    <button onclick="complete('${data.id}')">Complete</button>
+  `;
+}
+
+// Start
+async function start(id) {
+  await fetch(`${API}/interactions/${id}/start`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${TOKEN}` }
+  });
+  loadList();
+}
+
+// Complete
+async function complete(id) {
+  await fetch(`${API}/interactions/${id}/complete`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${TOKEN}` }
+  });
+  loadList();
+}
+
+function logout() {
+  localStorage.removeItem("token");
+  TOKEN = null;
+
+  document.getElementById("email").value = "";
+  document.getElementById("password").value = "";
+
+  document.getElementById("app").style.display = "none";
+  document.getElementById("login").style.display = "block";
+}
+
+window.onload = () => {
+  console.log("Page loaded");
+
+  TOKEN = localStorage.getItem("token");
+
+  if (TOKEN) {
+    showApp();
+  }
+};
+
+</script>
+
+</body>
+</html>

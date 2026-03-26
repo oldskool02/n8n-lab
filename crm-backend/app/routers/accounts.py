@@ -5,12 +5,9 @@ from datetime import datetime, timedelta
 
 
 from app.dependencies.database import get_db
-from app.models.account import Account
+from app.models import Account, Interaction, Contact, User
 from app.schemas.account import AccountCreate, AccountFull
-from app.models.interaction import Interaction
 from app.schemas.interaction import InteractionOut
-from app.models.contact import Contact
-from app.models.user import User
 from typing import List
 
 

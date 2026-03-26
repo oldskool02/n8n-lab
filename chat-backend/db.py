@@ -6,13 +6,22 @@ from typing import List, Optional
 
 from schemas import RecipeCreate, RecipeUpdate
 
+def get_secret(env_var, file_var):
+    import os
+    if file_var in os.environ:
+        try:
+            with open(os.environ[file_var], "r") as f:
+                return f.read().strip()
+        except Exception:
+            pass
+    return os.getenv(env_var)
 
 def get_connection():
     return psycopg2.connect(
         host=os.getenv("DB_HOST"),
         database=os.getenv("DB_NAME"),
         user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
+        password=get_secret("DB_PASSWORD", "DB_PASSWORD_FILE"),
     )
 
 # CREATE

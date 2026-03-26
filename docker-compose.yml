@@ -89,6 +89,7 @@ services:
   python-fx:
     build: ./python-fx
     working_dir: /app
+    command: gunicorn -w 2 -b 0.0.0.0:5000 app:app
     volumes:
       - ./python-fx:/app
     ports:
@@ -96,11 +97,13 @@ services:
     networks:
       - n8n_internal
     restart: unless-stopped
+    secrets:
+      - postgres_password
     environment:
       - DB_HOST=postgres
       - DB_NAME=${POSTGRES_DB}
       - DB_USER=${POSTGRES_USER}
-      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_PASSWORD_FILE=/run/secrets/postgres_password
 
   n8n-worker:
     build:
@@ -139,7 +142,7 @@ services:
       - n8n_internal
       
   cloudflared:
-    image: cloudflare/cloudflared:latest
+    image: cloudflare/cloudflared:2024.12.0
     restart: unless-stopped
     command: tunnel run oldskooln8n
     volumes:
@@ -153,12 +156,13 @@ services:
     depends_on:
       - postgres
     secrets:
+      - postgres_password
       - google_service_account
     environment:
       DB_HOST: postgres
       DB_NAME: ${POSTGRES_DB}
       DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_PASSWORD_FILE: /run/secrets/postgres_password
       GOOGLE_SERVICE_ACCOUNT_FILE: /run/secrets/google_service_account
     volumes:
       - ./doc-engine:/app
@@ -171,6 +175,8 @@ services:
     build: ./chat-backend
     container_name: n8n-lab-chat-backend
     restart: unless-stopped
+    secrets:
+    - postgres_password
     depends_on:
       - n8n
       - postgres
@@ -184,13 +190,18 @@ services:
       DB_HOST: postgres
       DB_NAME: ${POSTGRES_DB}
       DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_PASSWORD: /run/secrets/postgres_password
   crm-backend:
     build: ./crm-backend
     ports:
       - "8002:8002"
+    secrets:
+      - postgres_password
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/crm
+      DB_HOST: postgres
+      DB_NAME: crm
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD_FILE: /run/secrets/postgres_password
       UPLOAD_FOLDER: /data/crm_documents
     volumes:
       - ./crm-backend:/app

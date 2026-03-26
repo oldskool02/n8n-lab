@@ -3,6 +3,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 import uuid
 
+from sqlalchemy.orm import relationship
+
 from app.database import Base
 
 class User(Base):
@@ -20,4 +22,6 @@ class User(Base):
     role = Column(String, nullable=False)
 
     created_at = Column(DateTime, server_default=func.now())
+
+    interactions = relationship("Interaction", back_populates="user")
     
