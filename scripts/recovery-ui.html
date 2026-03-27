@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>System Recovery</title>
+  <style>
+    body { font-family: Arial; text-align: center; margin-top: 100px; }
+    button {
+      padding: 20px 40px;
+      font-size: 20px;
+      background-color: red;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🚨 System Recovery</h1>
+<p>Click only if system is broken</p>
+
+<button onclick="recover()">Recover System</button>
+
+<p id="status"></p>
+
+<script>
+function recover() {
+  const confirmation = prompt(
+    "⚠️ WARNING ⚠️\n\nThis will OVERWRITE the current database.\n\nType RECOVER to continue:"
+  );
+
+  if (confirmation !== "RECOVER") {
+    document.getElementById("status").innerText = "❌ Recovery cancelled";
+    return;
+  }
+
+  document.getElementById("status").innerText = "Starting recovery...";
+
+  fetch('http://127.0.0.1:5050/recover', {
+    method: 'POST'
+  })
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("status").innerText = data.status || data.error;
+  })
+  .catch(() => {
+    document.getElementById("status").innerText = "Error connecting to recovery service";
+  });
+}
+</script>
+
+</body>
+</html>
