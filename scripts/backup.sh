@@ -18,7 +18,7 @@ log() {
 
 die() {
   log "ERROR: $1"
-  /home/ianw/docker/n8n-lab/scripts/alert-telegram.sh "🚨 BACKUP FAILED: $1 on $(hostname)"
+  /app/scripts/alert-telegram.sh "🚨 BACKUP FAILED: $1 on $(hostname)"
   exit 1
 }
 
@@ -39,7 +39,7 @@ cp /home/ianw/docker/n8n-lab/docker-compose.yml "$DAILY/" || log "WARNING: compo
 cp /home/ianw/docker/n8n-lab/.env "$DAILY/" || log "WARNING: .env copy failed"
 
 # 3. Copy scripts
-tar -czf "$DAILY/scripts-$DATE.tar.gz" /home/ianw/docker/n8n-lab/scripts || log "WARNING: scripts backup failed"
+tar -czf "$DAILY/scripts-$DATE.tar.gz" /app/scripts || log "WARNING: scripts backup failed"
 
 # 4. Retention (7 days)
 find "$DAILY" -type f -mtime +7 -delete
@@ -72,7 +72,7 @@ if sha256sum -c "$DAILY/postgres-$DATE.sql.gz.sha256"; then
   log "Checksum verification passed"
 else
   log "ERROR: Checksum verification failed"
-  /home/ianw/docker/n8n-lab/scripts/alert-telegram.sh "🚨 Backup corrupted before upload"
+  /app/scripts/alert-telegram.sh "🚨 Backup corrupted before upload"
   exit 1
 fi
 
@@ -86,12 +86,12 @@ if command -v rclone >/dev/null 2>&1; then
       log "Cloud upload verified"
     else
       log "ERROR: Cloud upload verification failed"
-      /home/ianw/docker/n8n-lab/scripts/alert-telegram.sh "🚨 Cloud backup verification FAILED"
+      /app/scripts/alert-telegram.sh "🚨 Cloud backup verification FAILED"
     fi
 
   else
     log "WARNING: Offsite backup failed"
-    /home/ianw/docker/n8n-lab/scripts/alert-telegram.sh "⚠️ Cloud backup failed on $(hostname)"
+    /app/scripts/alert-telegram.sh "⚠️ Cloud backup failed on $(hostname)"
   fi
 else
   log "WARNING: rclone not installed"

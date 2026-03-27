@@ -28,7 +28,7 @@ if docker exec -i n8n-lab-postgres-1 psql -U n8n -d restore_test < /tmp/test-res
   log "Restore test SUCCESS"
 else
   log "ERROR: Restore test FAILED"
-  /home/ianw/docker/n8n-lab/scripts/alert-telegram.sh "🚨 Restore test FAILED on $(hostname)"
+  /app/scripts/alert-telegram.sh "🚨 Restore test FAILED on $(hostname)"
   exit 1
 fi
 

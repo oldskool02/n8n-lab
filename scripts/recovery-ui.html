@@ -38,7 +38,10 @@ function recover() {
   document.getElementById("status").innerText = "Starting recovery...";
 
   fetch('http://127.0.0.1:5050/recover', {
-    method: 'POST'
+    method: 'POST', 
+    headers: {
+      "Authorization": "CHANGE_ME"
+    }
   })
   .then(res => res.json())
   .then(data => {
