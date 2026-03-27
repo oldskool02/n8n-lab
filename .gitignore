@@ -79,3 +79,13 @@ doc-engine/credentials/
 
 # Test files
 test.txt
+
+# logs
+logs/
+*.log
+
+# backups
+backups/
+*.sql
+*.gz
+*.tar.gz
