@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>System Recovery</title>
+  <style>
+    body { font-family: Arial; text-align: center; margin-top: 50px; }
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      margin: 5px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .danger { background-color: red; color: white; }
+    .logout { background-color: #333; color: white; position: absolute; top: 20px; right: 20px; }
+    .backup { background-color: #eee; }
+    body { font-family: Arial; text-align: center; margin-top: 50px; }
+
+    #loader {
+      margin: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .empty {
+      color: #888;
+      margin-top: 20px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <button class="logout" onclick="logout()">Logout</button>
+
+  <h1>System Recovery</h1>
+  <p>This will restore your latest backup</p>
+
+  <button class="danger" onclick="recover()">Restore Latest Backup</button>
+
+  <p id="status"></p>
+
+<script>
+const SECRET = prompt("Enter recovery key");   // "NicoleSecureRecovery2026!";
+
+function recover() {
+  const confirmation = prompt(
+    "⚠️ WARNING ⚠️\n\nThis will restore the LATEST backup.\n\nType RECOVER to continue:"
+  );
+
+  if (confirmation !== "RECOVER") {
+    document.getElementById("status").innerText = "❌ Cancelled";
+    return;
+  }
+
+  document.getElementById("status").innerText = "Starting recovery...";
+
+  fetch('/recover', {
+    method: 'POST',
+    headers: {
+      "Authorization": SECRET
+    }
+  })
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("status").innerText = data.status || data.error;
+  })
+  .catch(() => {
+    document.getElementById("status").innerText = "Error starting recovery";
+  });
+}
+
+function logout() {
+  window.location.href = "/cdn-cgi/access/logout";
+}
+</script>
+
+</body>
+</html>

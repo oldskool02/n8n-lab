@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CRM Dashboard</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      display: flex;
+      height: 100vh;
+      background: #f7f9fc;
+    }
+
+    /* LEFT PANEL */
+    #sidebar {
+      width: 320px;
+      background: white;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #sidebar h2 {
+      padding: 15px;
+      margin: 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .section {
+      padding: 10px;
+    }
+
+    .section h4 {
+      margin: 10px 0 5px;
+      font-size: 13px;
+      color: #666;
+      text-transform: uppercase;
+    }
+
+    .item {
+      padding: 10px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+    }
+
+    .item:hover {
+      background: #f5f7fb;
+    }
+
+    .item.selected {
+      background: #e6f0ff;
+      border-left: 4px solid #007bff;
+    }
+
+    .late {
+      background: #ffe5e5;
+      border-left: 4px solid red;
+    }
+
+    .completed {
+      opacity: 0.5;
+    }
+
+    .badge {
+      background: red;
+      color: white;
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      margin-left: 5px;
+    }
+
+    /* MAIN PANEL */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #header {
+      background: white;
+      padding: 15px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #content {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    textarea {
+      width: 100%;
+      height: 80px;
+      margin-top: 10px;
+    }
+
+    input[type="datetime-local"] {
+      padding: 5px;
+      margin-top: 5px;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .actions {
+      margin-top: 15px;
+    }
+
+    /* LOGIN */
+    #login {
+      margin: auto;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="login">
+  <h2>Login</h2>
+  <input id="email" placeholder="Email"><br><br>
+  <input id="password" type="password" placeholder="Password"><br><br>
+  <button onclick="login()">Login</button>
+</div>
+
+<div id="app" style="display:none; width:100%;">
+  
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <h2>Follow-ups</h2>
+
+    <div class="section">
+      <h4>Active</h4>
+      <div id="activeList"></div>
+    </div>
+
+    <div class="section">
+      <h4>Coming</h4>
+      <div id="comingList"></div>
+    </div>
+
+    <div class="section">
+      <h4>Completed</h4>
+      <div id="completedList"></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div id="header">
+      <div><strong>CRM Dashboard</strong></div>
+      <button onclick="logout()">Logout</button>
+    </div>
+
+    <div id="content">
+      Select an interaction
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "http://localhost:8002";
+let TOKEN = localStorage.getItem("token");
+
+/* ---------------- LOGIN ---------------- */
+async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const formData = new URLSearchParams();
+  formData.append("username", email);
+  formData.append("password", password);
+
+  const res = await fetch(`${API}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: formData
+  });
+
+  if (!res.ok) {
+    alert("Login failed");
+    return;
+  }
+
+  const data = await res.json();
+  TOKEN = data.access_token;
+  localStorage.setItem("token", TOKEN);
+
+  showApp();
+}
+
+/* ---------------- APP INIT ---------------- */
+async function showApp() {
+  document.getElementById("login").style.display = "none";
+  document.getElementById("app").style.display = "flex";
+
+  await loadLists();
+}
+
+/* ---------------- LOAD LISTS ---------------- */
+async function loadLists() {
+  const res = await fetch(`${API}/interactions/grouped`, {
+    headers: { Authorization: `Bearer ${TOKEN}` }
+  });
+
+  const data = await res.json();
+
+  renderSection("activeList", data.active, true);
+  renderSection("comingList", data.coming, true);
+  renderSection("completedList", data.completed, false);
+}
+
+/* ---------------- RENDER ---------------- */
+function renderSection(containerId, items, editable) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  items.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "item";
+
+    if (!editable) div.classList.add("completed");
+
+    const overdue = item.follow_up_date && new Date(item.follow_up_date) < new Date();
+
+    if (overdue && editable) div.classList.add("late");
+
+    div.innerHTML = `
+      <strong>${item.account_name}</strong>
+      ${overdue && editable ? '<span class="badge">OVERDUE</span>' : ''}
+      <br>
+      <small>${item.follow_up_date || ""}</small>
+    `;
+
+    div.onclick = () => loadDetail(item, editable);
+
+    container.appendChild(div);
+  });
+}
+
+/* ---------------- DETAIL ---------------- */
+function loadDetail(item, editable) {
+  document.getElementById("content").innerHTML = `
+    <h2>${item.account_name}</h2>
+    <p><strong>Contact:</strong> ${item.contact_name}</p>
+
+    <h4>Notes</h4>
+    <div>${item.notes || "No notes"}</div>
+
+    <textarea id="noteInput" ${!editable ? "disabled" : ""}></textarea>
+    <button id="addNoteBtn" ${!editable ? "disabled" : ""} onclick="addNote('${item.id}')">Add Note</button>
+
+    <hr>
+
+    <input type="datetime-local" id="editDate" ${!editable ? "disabled" : ""}>
+    <button ${!editable ? "disabled" : ""} onclick="updateDate('${item.id}')">Save Date</button>
+
+    <div class="actions">
+      <button ${!editable ? "disabled" : ""} onclick="complete('${item.id}')">Complete</button>
+    </div>
+  `;
+}
+
+/* ---------------- ACTIONS ---------------- */
+async function addNote(id) {
+  const note = document.getElementById("noteInput").value;
+
+  await fetch(`${API}/interactions/${id}/add-note`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${TOKEN}`
+    },
+    body: JSON.stringify({ note })
+  });
+
+  loadLists();
+}
+
+async function updateDate(id) {
+  const date = document.getElementById("editDate").value;
+
+  await fetch(`${API}/interactions/${id}/update`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${TOKEN}`
+    },
+    body: JSON.stringify({
+      follow_up_date: new Date(date).toISOString()
+    })
+  });
+
+  loadLists();
+}
+
+async function complete(id) {
+  await fetch(`${API}/interactions/${id}/complete`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${TOKEN}` }
+  });
+
+  loadLists();
+}
+
+/* ---------------- LOGOUT ---------------- */
+function logout() {
+  localStorage.removeItem("token");
+  TOKEN = null;
+
+  document.getElementById("app").style.display = "none";
+  document.getElementById("login").style.display = "block";
+}
+
+/* ---------------- INIT ---------------- */
+window.onload = () => {
+  if (TOKEN) showApp();
+};
+</script>
+
+</body>
+</html>

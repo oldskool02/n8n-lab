@@ -1,0 +1,15 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "remote.WSL.defaultExtensions": [
+      "ms-vscode-remote.remote-wsl"
+    ],
+    "git.path": "/usr/bin/git",
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "remote.WSL.reopenFolders": "always"
+  }
+}

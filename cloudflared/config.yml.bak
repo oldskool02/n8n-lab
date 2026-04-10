@@ -1,0 +1,16 @@
+tunnel: 98dfa966-8429-41d2-984f-a10dae2e860f
+credentials-file: /etc/cloudflared/98dfa966-8429-41d2-984f-a10dae2e860f.json
+
+protocol: http2
+
+ingress:
+  - hostname: recovery.oldskooln8n.xyz
+    service: http://recovery-api:5050
+
+  - hostname: oldskooln8n.xyz
+    service: http://n8n-lab-n8n-1:5678
+
+  - hostname: chat.oldskooln8n.xyz
+    service: http://chat-backend:8000
+
+  - service: http_status:404

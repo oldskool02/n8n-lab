@@ -1,0 +1,16 @@
+FROM n8nio/n8n:stable
+
+USER root
+
+# Create custom extensions directory
+RUN mkdir -p /data/custom
+
+# Install IMAP community node into custom directory
+RUN cd /data/custom \
+    && npm init -y \
+    && npm install n8n-nodes-imap --save
+
+USER node
+
+ENV N8N_CUSTOM_EXTENSIONS=/data/custom
+ENV N8N_COMMUNITY_PACKAGES_ENABLED=true

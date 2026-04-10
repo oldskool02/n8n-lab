@@ -1,0 +1,212 @@
+services:
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    secrets:
+      - postgres_password
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - n8n-lab_n8n-lab_postgres_data:/var/lib/postgresql/data
+    networks:
+      - n8n_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - n8n_internal
+
+  n8n:
+    build:
+      context: .
+      dockerfile: Dockerfile.n8n
+    user: "0:0"
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    secrets:
+      - n8n_encryption_key
+      - postgres_password
+      - google_service_account
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: n8n
+      DB_POSTGRESDB_USER: n8n
+      DB_POSTGRESDB_PASSWORD_FILE: /run/secrets/postgres_password
+
+      N8N_ENCRYPTION_KEY_FILE: /run/secrets/n8n_encryption_key
+      N8N_HOST: oldskooln8n.xyz
+      N8N_WEBHOOK_URL: https://oldskooln8n.xyz
+      N8N_EDITOR_BASE_URL: https://oldskooln8n.xyz
+      N8N_TRUST_PROXY: "true"
+
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/google_service_account
+
+      EXECUTIONS_MODE: queue
+      QUEUE_BULL_REDIS_HOST: redis
+      QUEUE_BULL_REDIS_PORT: 6379
+    volumes:
+      - local-n8n_n8n_data:/home/node/.n8n
+    networks:
+      - n8n_internal
+
+  n8n-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.n8n
+    command: worker
+    user: "0:0"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    secrets:
+      - n8n_encryption_key
+      - postgres_password
+      - google_service_account
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: n8n
+      DB_POSTGRESDB_USER: n8n
+      DB_POSTGRESDB_PASSWORD_FILE: /run/secrets/postgres_password
+
+      N8N_ENCRYPTION_KEY_FILE: /run/secrets/n8n_encryption_key
+
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/google_service_account
+
+
+      EXECUTIONS_MODE: queue
+      QUEUE_BULL_REDIS_HOST: redis
+      QUEUE_BULL_REDIS_PORT: 6379
+    volumes:
+      - local-n8n_n8n_data:/home/node/.n8n
+    networks:
+      - n8n_internal
+
+  crm-backend:
+    build: ./crm/backend
+    ports:
+      - "8002:8002"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    secrets:
+      - postgres_password
+    environment:
+      DB_HOST: postgres
+      DB_NAME: crm
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD_FILE: /run/secrets/postgres_password
+    volumes:
+      - crm_documents:/data/crm_documents
+    networks:
+      - n8n_internal
+
+  chat-backend:
+    build: ./chat-backend
+    ports:
+      - "8001:8000"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    secrets:
+      - postgres_password
+    environment:
+      DB_HOST: postgres
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD_FILE: /run/secrets/postgres_password
+    networks:
+      - n8n_internal
+
+  doc-engine:
+    build: ./doc-engine
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    networks:
+      - n8n_internal
+
+  # python-fx:
+  #   build: ./python-fx
+  #   ports:
+  #     - "5000:5000"
+  #   restart: unless-stopped
+  #   networks:
+  #     - n8n_internal
+
+  # recovery-api:
+  #   build: ./recovery
+  #   ports:
+  #     - "5050:5050"
+  #   restart: unless-stopped
+  #   networks:
+  #     - n8n_internal
+
+  ollama:
+    image: ollama/ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - n8n_internal
+
+  cloudflared:
+    image: cloudflare/cloudflared:2024.12.0
+    restart: unless-stopped
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - /opt/n8n-lab/cloudflared:/etc/cloudflared
+    networks:
+      - n8n_internal
+
+networks:
+  n8n_internal:
+
+volumes:
+  n8n-lab_n8n-lab_postgres_data:
+
+  local-n8n_n8n_data:
+
+  redis_data:
+  crm_documents:
+  ollama_data:
+
+secrets:
+  postgres_password:
+    file: /opt/secrets/postgres_password
+
+  n8n_encryption_key:
+    file: /opt/secrets/n8n_encryption_key
+
+  google_service_account:
+    file: /opt/secrets/service-account.json

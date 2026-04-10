@@ -1,0 +1,93 @@
+# -----------------
+
+# Secrets
+
+# -----------------
+
+.env
+secrets/
+*.json
+.env.*
+!.env.example
+
+cloudflared/*.json
+
+# -----------------
+
+# Docker runtime / volumes
+
+# -----------------
+
+postgres_data/
+redis_data/
+n8n_data/
+ollama-models/
+*.pid
+
+# -----------------
+
+# n8n
+
+# -----------------
+
+.n8n/
+*.log
+logs/
+
+# -----------------
+
+# Python
+
+# -----------------
+
+**pycache**/
+*.pyc
+*.pyo
+*.pyd
+*.db
+.venv/
+venv/
+
+# -----------------
+
+# OS
+
+# -----------------
+
+.DS_Store
+Thumbs.db
+
+# -----------------
+
+# IDE
+
+# -----------------
+
+.vscode/
+.idea/
+
+# -----------------
+
+# Temporary
+
+# -----------------
+
+*.tmp
+*.swp
+*~
+
+# Credentials and secrets
+doc-engine/credentials/
+
+# Test files
+test.txt
+
+# logs
+logs/
+*.log
+
+# backups
+backups/
+*.sql
+*.gz
+*.tar.gz
