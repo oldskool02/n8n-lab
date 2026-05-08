@@ -1,0 +1,64 @@
+{
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a684625b-5429-4086-bee8-f65a23fa772d",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "invoice",
+        "operation": "getAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "29949819-0257-4c0f-9080-dbd0812ae368",
+      "name": "Get many invoices",
+      "credentials": {
+        "zohoOAuth2Api": {
+          "id": "O7bZ6DWy69BbkRR8",
+          "name": "Zoho account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get many invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "2126a91d-6a3b-4b4b-89d0-afcba5cde1e7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7cc022c7883e242651c99928a239e6fdb65950951ab30664250c1eeefc45294b"
+  },
+  "id": "QSLU5EORIK31ufxEUzXeX",
+  "tags": []
+}

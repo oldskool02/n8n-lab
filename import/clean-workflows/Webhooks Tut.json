@@ -1,0 +1,362 @@
+{
+  "name": "Webhooks Tut",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -480,
+        -48
+      ],
+      "id": "17058827-c093-4507-994e-f8a856f00e8b",
+      "name": "Webhook",
+      "webhookId": "cc96b602-73e7-44c8-9459-21c687a5e164"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook').item.json.body.message }}",
+        "options": {
+          "systemMessage": "=You are an AI recipe assistant.\n\nYou have tools that allow you to access and manage recipes.\n\nUse tools whenever possible when interacting with stored recipes.\n\nIf a recipe does not exist, you may generate a new recipe.\n\n----------------------------------------\nAVAILABLE TOOLS\n----------------------------------------\n\nget_recipes\nReturns all saved recipes.\n\nget_recipe\nReturns a single recipe by id.\n\ncreate_recipe\nCreates and saves a new recipe.\n\ndelete_recipe\nDeletes a recipe by id.\n\n----------------------------------------\nCREATING RECIPES\n----------------------------------------\n\nIf a user asks for a recipe that does not already exist:\n\n1. Generate the recipe.\n2. Save it using the create_recipe tool.\n3. Confirm to the user that the recipe was saved.\n\nWhen calling create_recipe you  MUST include:\n\ntitle\ningredients\ninstructions\n\nand you MUST return tool arguments in this exact structure:\n\n{\n\"title\": \"Chocolate Cake\",\n\"ingredients\": [\n\"2 cups flour\",\n\"1 cup sugar\",\n\"3/4 cup cocoa powder\"\n],\n\"instructions\": [\n\"Preheat oven to 180C\",\n\"Mix ingredients\",\n\"Bake for 30 minutes\"\n]\n}\n\nRules:\n- ingredients MUST be an array of strings\n- instructions MUST be an array of strings\n- NEVER return ingredients or instructions as a single string\n\n----------------------------------------\nSHOWING RECIPES\n----------------------------------------\n\nIf the user asks to see recipes:\n\nUse get_recipes.\n\nIf the user asks for a specific recipe:\n\n1. Use get_recipes\n2. Find the recipe with the closest matching title\n3. Extract its id\n4. Use get_recipe\n\n----------------------------------------\nDELETING RECIPES\n----------------------------------------\n\nIf the user asks to delete a recipe:\n\n1. Use get_recipes\n2. Find the matching title\n3. Extract its id\n4. Use delete_recipe"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        -48
+      ],
+      "id": "c1424d13-aa65-4c89-a653-7eeddfd75d06",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -32,
+        176
+      ],
+      "id": "237f1faf-33c9-4e9e-a1e1-808bf33075e5",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "I9fdheTt0Ds7nlEN",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.sessionId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        96,
+        176
+      ],
+      "id": "1b794ee6-340b-45eb-8445-48f6ff5bdad4",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "8jMCgDVlELMJ97MX",
+          "name": "n8n-chat"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "522bbceb-affc-4fb6-845f-74f360157b23",
+              "name": "sessionId",
+              "value": "=sessionId = {{ $json.headers['x-session-id'] || $json.headers['x-forwarded-for'] || $json.ip }}",
+              "type": "string"
+            },
+            {
+              "id": "94ac12bc-87a0-4442-8a33-ce9eea1079a8",
+              "name": "message",
+              "value": "={{ $json.body.prompt }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -256,
+        -48
+      ],
+      "id": "7808a46d-35ac-4924-b90d-d4e42c4f66e1",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n\"message\": {{$json[\"output\"]}}\n}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "enableStreaming": false
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        816,
+        -48
+      ],
+      "id": "658b89f6-6ebe-49f0-9cfe-2cff803c6f90",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Fetch all saved recipes",
+        "url": "http://chat-backend:8000/recipes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        176
+      ],
+      "id": "020ecca6-9e12-4e0d-aaa9-3e6fe7179c45",
+      "name": "get_recipes"
+    },
+    {
+      "parameters": {
+        "url": "=http://chat-backend:8000/recipes/{{$fromAI(\"id\")}}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        352,
+        176
+      ],
+      "id": "e63243e2-8084-48e3-9437-57acec2a7db0",
+      "name": "get_recipe"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=http://chat-backend:8000/recipes/{{$fromAI(\"id\")}}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        480,
+        176
+      ],
+      "id": "dddfd220-f9a2-4c09-b550-e78083105850",
+      "name": "delete_recipe"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://chat-backend:8000/recipes",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "={{$fromAI('title')}}"
+            },
+            {
+              "name": "ingredients",
+              "value": "={{$fromAI('ingredients')}}"
+            },
+            {
+              "name": "=instructions",
+              "value": "={{$fromAI('instructions')}}"
+            },
+            {
+              "name": "image_url",
+              "value": "={{$node[\"Generate Image\"].json.data[0].url}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        608,
+        176
+      ],
+      "id": "7dec1ac6-458d-46e4-b1cd-77fd6c04d1ae",
+      "name": "create_recipe"
+    }
+  ],
+  "pinData": {
+    "Edit Fields": [
+      {
+        "json": {
+          "sessionId": "sessionId = 196.41.10.182"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_recipes": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_recipe": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete_recipe": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_recipe": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "fde122a8-d1cb-46a2-bd7e-e99e0255d68f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7cc022c7883e242651c99928a239e6fdb65950951ab30664250c1eeefc45294b"
+  },
+  "id": "TRnadRFngN9ux_kvXHF4V",
+  "tags": []
+}

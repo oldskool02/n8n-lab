@@ -4,9 +4,18 @@ credentials-file: /etc/cloudflared/98dfa966-8429-41d2-984f-a10dae2e860f.json
 ingress:
   - hostname: oldskooln8n.xyz
     service: http://n8n:5678
+    originRequest:
+      httpHostHeader: oldskooln8n.xyz
+      noTLSVerify: true
 
   - hostname: chat.oldskooln8n.xyz
     service: http://chat-backend:8000
+
+  - hostname: api.oldskooln8n.xyz
+    service: http://crm-backend:8002
+
+  # - hostname: docs.oldskooln8n.xyz
+  #   service: http://doc-engine:8000
 
   # ONLY include this if recovery-api is running
   # - hostname: recovery.oldskooln8n.xyz

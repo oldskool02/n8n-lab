@@ -1,0 +1,177 @@
+{
+  "name": "Client Intake",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "client-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -304,
+        80
+      ],
+      "id": "b3c3f934-17bc-417f-8911-46f3f3357482",
+      "name": "Webhook",
+      "webhookId": "bb04871a-9e42-4a1e-a519-c133602cb7af"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        368,
+        -16
+      ],
+      "id": "afe64394-8413-46ca-8212-2c6bdfe82a8f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"status\": \"error\",\n  \"message\": \"Missing required fields\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        144,
+        176
+      ],
+      "id": "2197ab81-10b5-43a0-8c31-67574cb233d5",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "565e0e82-e956-47d1-815f-73b10d4edc06",
+              "leftValue": "={{ $json.body.full_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "03d781dc-6e78-4005-a0d4-e49085cecde1",
+              "leftValue": "={{ $json.body.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -80,
+        80
+      ],
+      "id": "d867180e-e42a-4658-b18b-85df311ce5be",
+      "name": "Validate Fields"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO clients (full_name, email, phone, company)\nVALUES ($1, $2, $3, $4)\nON CONFLICT (email) DO NOTHING\nRETURNING *;",
+        "options": {
+          "queryReplacement": "=[\n  {{ $json.body.full_name }},\n  {{ $json.body.email }},\n  {{ $json.body.phone }},\n  {{ $json.body.company }}\n]"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        144,
+        -16
+      ],
+      "id": "69249b3c-5d98-4cb3-8a06-12212238264d",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "8jMCgDVlELMJ97MX",
+          "name": "n8n-chat"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Fields": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "3e10cdbb-dda9-41ba-83ab-99fae8cf0168",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7cc022c7883e242651c99928a239e6fdb65950951ab30664250c1eeefc45294b"
+  },
+  "id": "ctGoEqHhKmTVrPm75zqzC",
+  "tags": []
+}
