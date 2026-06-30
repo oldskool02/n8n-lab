@@ -39,6 +39,12 @@ __pycache__/
 .venv/
 venv/
 
+#-----------------
+# Node.js
+#-----------------
+node_modules/
+npm-debug.log
+
 # -----------------
 # OS
 # -----------------
@@ -68,8 +74,12 @@ doc-engine/credentials/
 # -----------------
 backups/
 *.sql
-*.gz
-*.tar.gz
+
+#--------------
+# Scripts
+#--------------
+.update-status
+
 
 # -----------------
 # Test files
