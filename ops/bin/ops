@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+OPS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+source "$OPS_ROOT/lib/config.sh"
+
+COMMAND="${1:-}"
+
+COMMAND_SCRIPT="$OPS_ROOT/commands/${COMMAND}.sh"
+
+if [[ -x "$COMMAND_SCRIPT" ]]
+then
+    "$COMMAND_SCRIPT"
+else
+
+    echo "Unknown command: $COMMAND"
+    echo
+    echo "Try:"
+    echo "    ops version"
+
+    exit 1
+
+fi
+
+# case "$COMMAND" in
+
+#   version)
+
+#     "$OPS_ROOT/commands/version.sh"
+
+#     ;;
+#   *)
+
+#       echo "Unknown command: $COMMAND"
+#       echo
+#       echo "Try:"
+#       echo "    ops version"
+
+#       exit 1
+
+#       ;;
+
+# esac
