@@ -17,3 +17,11 @@ complex frameworks.
 
 The goal is to produce reliable, readable and maintainable code that can be
 understood and extended months or years later.
+
+## Versioning
+
+The Operations Toolkit follows Semantic Versioning.
+
+- MAJOR: Breaking architectural changes.
+- MINOR: New features or subsystems.
+- PATCH: Bug fixes and maintenance.
