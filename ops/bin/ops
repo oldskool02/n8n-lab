@@ -14,19 +14,27 @@ source "$OPS_ROOT/lib/common.sh"
 source "$OPS_ROOT/lib/system.sh"
 source "$OPS_ROOT/lib/docker.sh"
 
-COMMAND="${1:-}"
-
-COMMAND_SCRIPT="$OPS_ROOT/commands/${COMMAND}.sh"
-
-if [[ -f "$COMMAND_SCRIPT" ]]
+COMMAND="${1:-help}"
+if (( $# > 0 ));
 then
-    source "$COMMAND_SCRIPT"
-else
+    shift
+fi
 
+COMMAND_FILE="$OPS_ROOT/commands/${COMMAND}.sh"
+
+if [[ -f "$COMMAND_FILE" ]]
+then
+    source "$COMMAND_FILE"
+
+    COMMAND_FUNCTION="run_$COMMAND"
+
+    "$COMMAND_FUNCTION" "$@"
+
+else
     echo "Unknown command: $COMMAND"
     echo
     echo "Try:"
-    echo "    ops version"
+    echo "    ops help"
 
     exit 1
 

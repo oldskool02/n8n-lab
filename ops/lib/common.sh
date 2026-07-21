@@ -1,7 +1,4 @@
 
-# OPS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-# source "$OPS_ROOT/lib/config.sh"
 
 readonly OK="✔️"
 readonly ERROR="❌"

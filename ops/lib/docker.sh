@@ -1,15 +1,5 @@
 
-# OPS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-# source "$OPS_ROOT/lib/config.sh"
-
-# source "$OPS_ROOT/lib/common.sh"
-
-# source "$OPS_ROOT/lib/system.sh"
-
-
-check_docker()
-{
+check_docker() {
     echo "----------------"
     echo "Docker Subsystem"
     echo "----------------"
@@ -36,8 +26,7 @@ check_docker()
 
 }
 
-check_container()
-{
+check_container() {
     # TODO:
     # Currently we query Docker once per container.
     # Future optimisation:
@@ -81,8 +70,7 @@ check_container()
     echo
 }
 
-check_all_containers()
-{
+check_all_containers() {
     docker compose ps --format json |
     jq -r '.Service' |
     while read -r SERVICE
