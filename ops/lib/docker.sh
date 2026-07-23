@@ -9,11 +9,13 @@ check_docker() {
 
     echo
     echo "Checking Docker Compose..."
-    if docker compose version >/dev/null 2>&1
+    if version="$(docker compose version 2>/dev/null 2>&1)"
     then
-      local VERSION="$(docker compose version)"
-      echo "${OK} Docker Compose is available"
-      echo "  Version: ${VERSION}"
+      success "Docker Compose is available"
+      detail "Version:" "${version}"
+    else
+      error "Docker Compose is not available"
+      exit "$EXIT_ERROR"
     fi
 
     # Check Docker Daemon
@@ -21,7 +23,11 @@ check_docker() {
     echo "Checking Docker Daemon..."
     if docker ps >/dev/null 2>&1
     then
-      echo "${OK} Docker Daemon is available"
+      success "Docker Daemon is available"
+    #   echo "${OK} Docker Daemon is available"
+    else
+      error "Docker Daemon is not available"
+      exit "$EXIT_ERROR"
     fi
 
 }
