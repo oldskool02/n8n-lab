@@ -1,10 +1,29 @@
 # Operations Toolkit Architecture
 
+
+# Engineering Philosophy
+
+The Operations Toolkit is a Compose-aware application.
+
+The Operations Toolkit is not a collection of Bash scripts.
+
+It is a software system implemented in Bash.
+
+The architecture is designed around responsibilities rather than technologies.
+
+Commands express intent.
+
+Framework components perform work.
+
+External tools own their respective domains.
+
+The shell orchestrates the system.
+
 ## Purpose
 
 The Operations Toolkit (`ops`) is a modular command-line application designed to simplify the administration of the n8n-lab environment.
 
-The project follows a framework-first architecture. Commands express intent while shared framework services implement common behaviour.
+The project follows a framework-first architecture. Commands express intent while shared framework Components implement common behaviour.
 
 ---
 
@@ -37,10 +56,20 @@ The project follows these principles:
           Command Module
                   │
                   ▼
-         Framework Services
+         Framework Components
                   │
                   ▼
-          System / Docker
+              Adaptors
+                  │
+                  ▼
+               Docker
+                  │
+                  ▼
+                Linux
+                  │
+                  ▼
+                 Git
+
 ```
 
 ---
@@ -106,14 +135,14 @@ run_doctor()
 Command modules should:
 
 - implement command-specific behaviour.
-- call framework services.
+- call framework Components.
 - not perform global initialisation.
 
 ---
 
-## Framework Services
+## Framework Components
 
-Framework services live inside `lib/`.
+Framework Components live inside `lib/`.
 
 They provide reusable functionality shared by every command.
 
@@ -151,29 +180,31 @@ Future responsibilities:
 
 # Command Lifecycle
 
+## Commands express intent, not implementation.
+
 Every command should follow the same lifecycle.
 
 ```
-Validate input
+Understand Request
         │
         ▼
-Validate environment
+Collect Data
         │
         ▼
-Execute command
+Build Model
         │
         ▼
-Present results
+Present Model
         │
         ▼
-Exit
+Return exit status
 ```
 
 ---
 
 # Public Interfaces
 
-Framework services expose stable interfaces.
+Framework Components expose stable interfaces.
 
 Commands should call framework functions instead of implementing their own behaviour.
 
@@ -221,3 +252,89 @@ The project follows the principle:
   Container unhealthy → error()
   Missing optional service → maybe warn()
   Healthy service → success()
+
+# Models
+## Domain Model
+
+  The framework defines its own models.
+
+  Models represent reality.
+
+  They do not expose vendor-specific structures.
+
+  Example:
+  Docker JSON
+
+  ↓
+
+  ServiceStatus
+
+  ↓
+
+  Presentation
+
+The remainder of the framework should depend on the model rather than Docker's JSON.
+
+# External Contracts
+  The framework depends on external contracts.
+
+  Examples:
+
+    - Docker CLI
+    - Docker JSON output
+    - jq
+    - Git
+
+  Changes to external contracts should be isolated to adapter modules.
+
+  Framework commands should not depend directly on vendor-specific implementations.
+
+## The Framework Owns the Public Model
+
+  External tools expose their own data structures.
+
+  The framework converts those structures into its own domain models.
+
+  These domain models form the public contract of the framework.
+
+  Presentation layers and external consumers depend on the framework's models, not on vendor-specific data.
+
+
+
+# Presentation Framework
+
+## Responsibility
+
+  - Formatting messages
+  - Printing messages
+  - Headers
+  - Tables
+  - Colours
+
+## Owned by:
+
+  lib/print.sh
+
+
+## Ownership
+print.sh
+---------
+Owns:
+- Message formatting
+- Message output
+- Headers
+- Tables
+- Terminal presentation
+
+docker.sh
+----------
+Owns:
+- Docker CLI
+- Docker JSON
+- ServiceStatus construction
+
+system.sh
+----------
+Owns:
+- Prerequisite verification
+- System capability checks

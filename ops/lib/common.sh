@@ -1,5 +1,4 @@
 
-
 check_program()
 {
     # Assumption
@@ -11,107 +10,18 @@ check_program()
     local COMMAND_NAME="$2"
     # VERSION="$("$COMMAND_NAME" --version)"
 
-    echo "Checking ${DISPLAY_NAME}..."
+    checking "${DISPLAY_NAME}"
 
     if command -v "$COMMAND_NAME" >/dev/null 2>&1
     then
         local VERSION
         VERSION="$("$COMMAND_NAME" --version)"
         success "${DISPLAY_NAME} is installed"
-        echo "  Version : ${VERSION}"
+        detail "  Version" "${VERSION}"
     else
         error "${DISPLAY_NAME} is NOT installed"
         return "$EXIT_ERROR"
     fi
 
-    echo
-}
-
-############################################################
-# Messaging Framework
-############################################################
-detail() {
-    local label="$1"
-    local value="$2"
-
-    printf '   %-10s %s\n' "$label:" "$value"
-
-}
-success() {
-    local message="$1"
-    local formatted_message
-
-    formatted_message="$(format_message "success" "$message")"
-
-    print_message "$formatted_message"
-}
-
-
-info() {
-    local message="$1"
-    local formatted_message
-
-    formatted_message="$(format_message "info" "$message")"
-
-    print_message "$formatted_message"
-}
-
-warn() {
-    local message="$1"
-    local formatted_message
-
-    formatted_message="$(format_message "warning" "$message")"
-
-    print_message "$formatted_message"
-}
-
-error() {
-    local message="$1"
-    local formatted_message
-
-    formatted_message="$(format_message "error" "$message")"
-
-    print_message "$formatted_message"
-
-}
-
-fatal() {
-    local message="$1"
-
-    error "$message"
-
-    exit "$EXIT_FATAL"
-}
-
-
-print_message() {
-    local message="$1"
-
-    printf '%s\n' "$message"
-}
-
-format_message() {
-    local level="$1"
-    local message="$2"
-    local prefix
-
-    case "$level" in
-        success)
-            prefix="${OK} Success"
-            ;;
-        warning)
-            prefix="${WARNING} Warning"
-            ;;
-        info)
-            prefix="${INFO} Info"
-            ;;
-        error)
-            prefix="${FAIL} ERROR"
-            ;;
-        *)
-            prefix="$level"
-            ;;
-    esac
-
-    printf '%s: %s' "$prefix" "$message"
+    newline
 }

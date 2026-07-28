@@ -9,6 +9,7 @@ export OPS_ROOT
 # Global libraries
 source "$OPS_ROOT/lib/config.sh"
 source "$OPS_ROOT/lib/common.sh"
+source "$OPS_ROOT/lib/print.sh"
 
 # Global Constants
 source "$OPS_ROOT/lib/constants.sh"

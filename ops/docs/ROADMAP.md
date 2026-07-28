@@ -372,6 +372,14 @@ Ideas that should not interrupt the current sprint.
 - Performance benchmarking
 - Automatic updates
 
+# Developer Environment
+  VS Code Server cleanup
+  Detect orphaned VS Code Server versions
+  Check Docker version
+  Check Git version
+  Check Python version
+  Check available disk space
+  Check backup age
 ---
 
 # Guiding Principles
