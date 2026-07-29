@@ -1,4 +1,4 @@
-
+#!/usr/bin/env bash
 check_system()
 {
     check_program "Git" git

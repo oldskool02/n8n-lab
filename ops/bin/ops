@@ -36,11 +36,11 @@ then
     "$command_function" "$@"
 
 else
-    echo "Unknown command: $command"
-    echo
-    echo "Try:"
-    echo "    ops help"
+    error "Unknown command: $command"
+    newline
+    print_message "Try:"
+    print_message "    ops help"
 
-    exit 1
+    exit "$EXIT_ERROR"
 
 fi
