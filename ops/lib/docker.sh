@@ -40,7 +40,7 @@ show_service_status() {
 
     service="$(jq -r '.Service' <<< "$service_status")"
     state="$(jq -r '.State' <<< "$service_status")"
-    health="$(jq -r '.Health // "No health check"' <<< "$service_status")"
+    health="$(jq -r '.Health | if . == null or . == "" then "No health check" else . end' <<< "$service_status")"
     image="$(jq -r '.Image' <<< "$service_status")"
 
     title="Service - $service"
@@ -51,7 +51,7 @@ show_service_status() {
 
     print_message "${OK} State   : $state"
     print_message "${OK} Health  : $health"
-    print_message "      Image   : $image"
+    print_message "   Image   : $image"
     newline
 }
 
