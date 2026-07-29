@@ -190,3 +190,17 @@ Do not rename or wrap standard environment variables simply to match project con
 Consistency is preferred over individual coding style.
 
 Once a project standard has been adopted, it should be followed throughout the codebase. Any future changes to the coding standard should be deliberate architectural decisions and applied consistently.
+
+# Responsibility Ownership
+system.sh
+    Owns system prerequisite checks.
+
+docker.sh
+    Owns Docker subsystem checks.
+
+print.sh
+    Owns presentation.
+
+doctor.sh
+    Owns orchestration.
+    
