@@ -75,3 +75,10 @@ get_service_statuses() {
         }
     '
 }
+
+show_service_logs() {
+  local service
+  service="$1"
+
+  docker compose logs "$service"
+}

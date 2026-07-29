@@ -48,6 +48,18 @@ service_status           ✓
 container                ✗
 ```
 
+# Naming Conventions
+
+Command entry points use the prefix:
+
+    run_<command>
+
+Subsystem functions describe their responsibility:
+
+    check_docker()
+    show_service_logs()
+    get_service_statuses()
+
 ---
 
 # Function Specifications
@@ -112,6 +124,12 @@ Evaluate the health of the development environment.
 # Coding Standards
 
 These standards exist to improve readability, maintainability, and consistency across the project. Once adopted, they should be applied consistently.
+
+# Command Interface
+  Commands follow a consistent grammar:
+     ops <command> <required arguments> [optional flags]
+
+  Required positional arguments always precede optional flags and options.
 
 ---
 
@@ -203,4 +221,3 @@ print.sh
 
 doctor.sh
     Owns orchestration.
-    
