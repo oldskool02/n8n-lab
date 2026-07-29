@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 
 check_docker() {
-    echo "----------------"
-    echo "Docker Subsystem"
-    echo "----------------"
+    section "Docker Subsystem"
 
-    # echo "Check Docker CLI"
     check_program "Docker CLI" docker
 
-    echo
-    echo "Checking Docker Compose..."
+    newline
+    checking "Docker Compose"
     if version="$(docker compose version 2>/dev/null 2>&1)"
     then
       success "Docker Compose is available"
@@ -20,12 +17,11 @@ check_docker() {
     fi
 
     # Check Docker Daemon
-    echo
-    echo "Checking Docker Daemon..."
+    newline
+    checking "Docker Daemon"
     if docker ps >/dev/null 2>&1
     then
       success "Docker Daemon is available"
-    #   echo "${OK} Docker Daemon is available"
     else
       error "Docker Daemon is not available"
       exit "$EXIT_ERROR"
@@ -33,106 +29,49 @@ check_docker() {
 
 }
 
-# check_container() {
-#     # TODO:
-#     # Currently we query Docker once per container.
-#     # Future optimisation:
-#     # Pass each JSON object directly to check_container()
-#     # so docker compose ps is only executed once.
+show_service_status() {
 
-#     local SERVICE_NAME="$1"
-#     local JSON
-#     local STATUS
+    local service_status="$1"
+    local service
+    local state
+    local health
+    local image
+    local title
 
-#     JSON="$(docker compose ps "$SERVICE_NAME" --format json)"
-#     STATUS=$?
+    service="$(jq -r '.Service' <<< "$service_status")"
+    state="$(jq -r '.State' <<< "$service_status")"
+    health="$(jq -r '.Health // "No health check"' <<< "$service_status")"
+    image="$(jq -r '.Image' <<< "$service_status")"
 
-#     if [[ $STATUS -ne 0 ]]
-#     then
-#         echo "${ERROR} Service not found"
-#         return
-#     fi
-
-#     local SERVICE
-#     local STATE
-#     local HEALTH
-
-#     SERVICE="$(echo "$JSON" | jq -r '.Service')"
-#     STATE="$(echo "$JSON" | jq -r '.State')"
-#     HEALTH="$(echo "$JSON" | jq -r '.Health')"
-
-#     echo
-#     local TITLE="Container - $SERVICE"
-#     echo "$TITLE"
-#     printf '%*s\n' "${#TITLE}" '' | tr ' ' '-'
-
-#     # echo "${OK} Service : $SERVICE"
-#     echo "${OK} State   : $STATE"
-#     if [[ -z $HEALTH ]]
-#     then
-#         HEALTH="No health check"
-#     fi
-
-#     echo "${OK} Health  : $HEALTH"
-#     echo
-# }
-
-check_container() {
-    # TODO:
-    # Currently we query Docker once per container.
-    # Future optimisation:
-    # Pass each JSON object directly to check_container()
-    # so docker compose ps is only executed once.
-
-    local CONTAINER="$1"
-    local SERVICE
-    local STATE
-    local HEALTH
-    local IMAGE
-
-    SERVICE="$(jq -r '.Service' <<< "$CONTAINER")"
-    STATE="$(jq -r '.State' <<< "$CONTAINER")"
-    HEALTH="$(jq -r '.Health // "No health check"' <<< "$CONTAINER")"
-    IMAGE="$(jq -r '.Image' <<< "$CONTAINER")"
+    title="Service - $service"
 
     newline
-    local TITLE="Service - $SERVICE"
-    echo "$TITLE"
-    printf '%*s\n' "${#TITLE}" '' | tr ' ' '-'
+    print_message "$title"
+    underline "$title"
 
-    # echo "${OK} Service : $SERVICE"
-    echo "${OK} State   : $STATE"
-    echo "${OK} Health  : $HEALTH"
-    echo "      Image   : $IMAGE"
-    echo
+    print_message "${OK} State   : $state"
+    print_message "${OK} Health  : $health"
+    print_message "      Image   : $image"
+    newline
 }
 
-check_all_containers() {
-    docker compose ps --format json |
-    jq -c '.' |
-    while read -r CONTAINER
+check_all_services() {
+    get_service_statuses |
+    while read -r service_status
     do
-        check_container "$CONTAINER"
+        show_service_status "$service_status"
     done
-    # get_service_statuses |
-    # while read -r SERVICE_STATUS
-    # do
-    #   SERVICE="$(jq -r '.Service' <<< "$SERVICE_STATUS")"
-    #   STATE="$(jq -r '.State' <<< "$SERVICE_STATUS")"
-    #   HEALTH="$(jq -r '.Health' <<< "$SERVICE_STATUS")"
-    #   IMAGE="$(jq -r '.Image' <<< "$SERVICE_STATUS")"
-    # done
-
+    newline
 }
 
 get_service_statuses() {
-  docker compose ps --format json |
-  jq -c '
-      {
-          Service: .Service,
-          State: .State,
-          Health: (.Health // "No health check"),
-          Image: .Image
-      }
-  '
+    docker compose ps --format json |
+    jq -c '
+        {
+            Service: .Service,
+            State: .State,
+            Health: (.Health // "No health check"),
+            Image: .Image
+        }
+    '
 }

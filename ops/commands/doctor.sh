@@ -2,5 +2,5 @@
 run_doctor() {
     check_system
     check_docker
-    check_all_containers
+    check_all_services
 }

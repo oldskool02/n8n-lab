@@ -32,6 +32,22 @@ These principles guide architectural and implementation decisions throughout the
 - **Every Responsibility Has an Owner**
   Every responsibility belongs to a specific function, module, or command. Ownership should always be clear.
 
+## Naming
+
+Function and variable names should describe their responsibility or the concept they represent rather than the underlying implementation.
+
+Prefer project terminology over technology-specific terminology where it accurately expresses the abstraction.
+
+Examples:
+
+```text
+show_service_status()    ✓
+check_container()        ✗
+
+service_status           ✓
+container                ✗
+```
+
 ---
 
 # Function Specifications

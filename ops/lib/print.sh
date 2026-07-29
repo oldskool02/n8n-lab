@@ -27,6 +27,7 @@ section() {
     local heading="$1"
 
     newline
+    
     print_message "$heading"
     underline "$heading"
 }
