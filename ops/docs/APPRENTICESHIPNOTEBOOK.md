@@ -439,3 +439,11 @@ I am learning how to design and build maintainable software systems.
 The language may change in the future.
 
 The engineering principles will not.
+
+
+# GIT
+git status
+git diff
+git add .
+git diff --staged
+git commit -m "Refactor container checks to use a single Docker query"

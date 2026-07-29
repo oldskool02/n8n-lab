@@ -1,6 +1,5 @@
 
-check_program()
-{
+check_program() {
     # Assumption
     # The executable supports "--version"
     # If we encounter exceptions in future, refactor this function

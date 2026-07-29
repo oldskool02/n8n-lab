@@ -18,24 +18,24 @@ source "$OPS_ROOT/lib/constants.sh"
 source "$OPS_ROOT/lib/system.sh"
 source "$OPS_ROOT/lib/docker.sh"
 
-COMMAND="${1:-help}"
+command="${1:-help}"
 if (( $# > 0 ));
 then
     shift
 fi
 
-COMMAND_FILE="$OPS_ROOT/commands/${COMMAND}.sh"
+command_file="$OPS_ROOT/commands/${command}.sh"
 
-if [[ -f "$COMMAND_FILE" ]]
+if [[ -f "$command_file" ]]
 then
-    source "$COMMAND_FILE"
+    source "$command_file"
 
-    COMMAND_FUNCTION="run_$COMMAND"
+    command_function="run_$command"
 
-    "$COMMAND_FUNCTION" "$@"
+    "$command_function" "$@"
 
 else
-    echo "Unknown command: $COMMAND"
+    echo "Unknown command: $command"
     echo
     echo "Try:"
     echo "    ops help"

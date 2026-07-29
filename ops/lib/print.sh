@@ -23,6 +23,13 @@ newline() {
     printf "\n"
 }
 
+section() {
+    local HEADING="$1"
+
+    newline
+    echo "$HEADING"
+    printf '%*s\n' "$HEADING" '' | tr ' ' '-'
+}
 
 ############################################################
 # Status Messages
