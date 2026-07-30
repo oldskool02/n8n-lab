@@ -26,3 +26,18 @@ Examples:
     ops logs redis --tail 100
 EOF
 }
+
+run_logs_help() {
+    cat <<EOF
+
+Operations Toolkit (logs)
+
+Usage:
+    ops logs <service> [options]
+
+Options:
+    --follow            Follow log output
+    --tail <lines>      Show the last <lines> log entries
+    --timestamps        Show timestamps
+EOF
+}
