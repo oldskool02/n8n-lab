@@ -74,6 +74,7 @@ doc-engine/credentials/
 # -----------------
 backups/
 *.sql
+n8n_data_backup.tar.gz
 
 #--------------
 # Scripts
