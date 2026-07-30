@@ -76,9 +76,16 @@ get_service_statuses() {
     '
 }
 
+# ops logs <options> argument
 show_service_logs() {
-  local service
-  service="$1"
+  local service="$1"
+  local follow="$2"   # Note: boolean. For now
 
-  docker compose logs "$service"
+  if [[ "$follow" == true ]]
+  then
+    docker compose logs --follow "$service"
+  else
+    docker compose logs "$service"
+  fi
+
 }

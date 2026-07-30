@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 run_help() {
     cat <<EOF
