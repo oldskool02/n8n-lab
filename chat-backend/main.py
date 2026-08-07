@@ -169,8 +169,8 @@ async def generate_recipe_stream(data: RecipeGenerate):
             # conversation_memory.append({
             #     "role": "assistant",
             #     "content": recipe["title"]
-            # })            
-            
+            # })
+
             # recipe = response.json()
 
             # # Handle recipe list (e.g. "show my recipes")
@@ -179,7 +179,7 @@ async def generate_recipe_stream(data: RecipeGenerate):
             #         yield f"TITLE:{r['title']}\n"
             #         await asyncio.sleep(0.3)
             #     return
-            
+
             # # Save the recipe here
             # saved = create_recipe(RecipeCreate(**recipe))
 

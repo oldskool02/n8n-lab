@@ -131,7 +131,7 @@ services:
   chat-backend:
     build: ./chat-backend
     # ports:
-    #   - "8001:8000"
+    #   - "127.0.0.1:8001:8000"
     restart: unless-stopped
     depends_on:
       postgres:
@@ -143,6 +143,14 @@ services:
       DB_NAME: recipes
       DB_USER: ${POSTGRES_USER}
       DB_PASSWORD_FILE: /run/secrets/postgres_password
+    networks:
+      - n8n_internal
+
+  recipe-platform:
+    build: ./recipe-platform
+    ports:
+      - "8001:8000"
+    restart: unless-stopped
     networks:
       - n8n_internal
 

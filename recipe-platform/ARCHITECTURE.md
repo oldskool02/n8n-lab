@@ -13,3 +13,20 @@ PostgreSQL is the single source of truth.
 FastAPI owns recipe management.
 
 n8n never writes directly to the database.
+
+Laptop Browser
+        │
+        ▼
+192.168.101.110:8001
+        │
+Docker Port Mapping
+        │
+recipe-platform Container
+        │
+uv
+        │
+Uvicorn
+        │
+FastAPI
+        │
+/health
