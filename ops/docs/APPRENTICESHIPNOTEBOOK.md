@@ -289,6 +289,31 @@ run_version "$@"
 
 to forward arguments unchanged.
 
+
+## Golden Rule
+
+When something goes wrong, ask:
+
+**Who owns this responsibility?**
+
+Do not ask:
+
+"What command fixes it?"
+
+Every problem belongs to a layer.
+
+- Compose describes.
+- Docker creates.
+- Images provide software.
+- Containers execute software.
+- Volumes store persistent data.
+- Networks transport traffic.
+- Docker DNS resolves service names.
+- Environment variables configure applications.
+- Applications interpret their own configuration.
+
+Understanding who owns the responsibility tells you where to troubleshoot.
+
 ---
 
 ## shift
