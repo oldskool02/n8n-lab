@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
-from app.database import get_connection
+from sqlalchemy import text
+from app.database import SessionLocal
 
 app = FastAPI()
 
@@ -13,13 +14,10 @@ def health():
 
 @app.get("/health/database")
 def database_health():
+    session = SessionLocal()
+
     try:
-        conn = get_connection()
-
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT 1")
-
-            conn.close()
+        session.execute(text("SELECT 1"))
 
         return {
             "status": "healthy",
@@ -30,3 +28,5 @@ def database_health():
             status_code=503,
             detail=f"Database connection failed: {e}"
         )
+    finally:
+        session.close()
