@@ -1,8 +1,15 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy import text
-from app.database import SessionLocal
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.routes.recipes import router as recipes_router
+from app.routes.users import router as users_router
 
 app = FastAPI()
+
+app.include_router(recipes_router)
+app.include_router(users_router)
 
 
 @app.get("/health")
@@ -13,11 +20,10 @@ def health():
 
 
 @app.get("/health/database")
-def database_health():
-    session = SessionLocal()
+def database_health(db: Session = Depends(get_db)):
 
     try:
-        session.execute(text("SELECT 1"))
+        db.execute(text("SELECT 1"))
 
         return {
             "status": "healthy",
@@ -28,5 +34,3 @@ def database_health():
             status_code=503,
             detail=f"Database connection failed: {e}"
         )
-    finally:
-        session.close()
