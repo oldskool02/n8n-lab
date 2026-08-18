@@ -28,3 +28,11 @@ DATABASE_URL = (
     f"{DB_HOST}:{DB_PORT}/"
     f"{DB_NAME}"
 )
+
+JWT_SECRET_KEY = get_secret(
+    os.getenv("JWT_SECRET_KEY_FILE")
+)
+
+JWT_EXPIRE_MINUTES = int(
+    os.getenv("JWT_EXPIRE_MINUTES")
+)
