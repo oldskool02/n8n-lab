@@ -8,9 +8,6 @@ ingress:
       httpHostHeader: oldskooln8n.xyz
       noTLSVerify: true
 
-  - hostname: chat.oldskooln8n.xyz
-    service: http://chat-backend:8000
-
   - hostname: portainer.oldskooln8n.xyz
     service: http://portainer:9000
 
