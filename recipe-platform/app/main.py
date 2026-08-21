@@ -32,5 +32,5 @@ def database_health(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(
             status_code=503,
-            detail=f"Database connection failed: {e}"
+            detail="Database connection failed"
         )

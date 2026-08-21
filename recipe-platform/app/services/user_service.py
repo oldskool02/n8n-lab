@@ -40,7 +40,7 @@ def create_user_service(
     return user
 
 
-def authenticate_user(
+def authenticate_user_service(
     db: Session,
     data: UserLogin,
 ):

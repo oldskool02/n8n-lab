@@ -61,3 +61,27 @@ def create_recipe_service(
         raise
 
     return recipe
+
+
+def get_user_recipe(
+    db: Session,
+    user_id: int,
+    recipe_id: int,
+):
+    """
+    Get a specific recipe belonging to the user.
+
+    Returns:
+        Recipe | None: The recipe if it belongs to the user,
+        otherwise None.
+
+    """
+
+    statement = select(Recipe).where(
+        Recipe.id == recipe_id,
+        Recipe.user_id == user_id,
+    )
+
+    result = db.execute(statement)
+
+    return result.scalar_one_or_none()

@@ -36,3 +36,7 @@ JWT_SECRET_KEY = get_secret(
 JWT_EXPIRE_MINUTES = int(
     os.getenv("JWT_EXPIRE_MINUTES")
 )
+
+REFRESH_TOKEN_EXPIRE_DAYS = int(
+    os.getenv("REFRESH_TOKEN_EXPIRE_DAYS")
+)
