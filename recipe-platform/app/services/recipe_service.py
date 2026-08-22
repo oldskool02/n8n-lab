@@ -85,3 +85,54 @@ def get_user_recipe(
     result = db.execute(statement)
 
     return result.scalar_one_or_none()
+
+
+def update_recipe_service(
+    db: Session,
+    user_id: int,
+    recipe_id: int,
+    data: RecipeCreate,
+):
+    recipe = get_user_recipe(
+        db,
+        user_id,
+        recipe_id,
+    )
+
+    if recipe is None:
+        return None
+
+    recipe.title = data.title
+    recipe.servings = data.servings
+    recipe.is_user_modified = True
+
+    recipe.ingredients.clear()
+
+    for item in data.ingredients:
+        ingredient = RecipeIngredient(
+            quantity=item.quantity,
+            unit=item.unit,
+            ingredient=item.ingredient,
+        )
+
+        recipe.ingredients.append(ingredient)
+
+    recipe.steps.clear()
+
+    for item in data.steps:
+        step = RecipeStep(
+            step_number=item.step_number,
+            instruction=item.instruction,
+        )
+
+        recipe.steps.append(step)
+
+    try:
+        db.commit()
+        db.refresh(recipe)
+
+    except Exception:
+        db.rollback()
+        raise
+
+    return recipe

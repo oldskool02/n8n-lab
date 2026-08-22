@@ -66,6 +66,7 @@ class RecipeResponse(BaseModel):
     id: int
     title: str
     servings: int
+    is_user_modified: bool
 
     ingredients: list[RecipeIngredientResponse]
     steps: list[RecipeStepResponse]

@@ -9,6 +9,7 @@ from app.services.recipe_service import (
     get_user_recipes,
     get_user_recipe,
     create_recipe_service,
+    update_recipe_service,
 )
 
 
@@ -35,6 +36,29 @@ def get_recipe(
         db,
         current_user.id,
         recipe_id,
+    )
+
+    if recipe is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Recipe not found",
+        )
+
+    return recipe
+
+
+@router.put("/{recipe_id}", response_model=RecipeResponse)
+def update_recipe(
+    recipe_id: int,
+    data: RecipeCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    recipe = update_recipe_service(
+        db,
+        current_user.id,
+        recipe_id,
+        data,
     )
 
     if recipe is None:

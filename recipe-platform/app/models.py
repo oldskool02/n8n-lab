@@ -83,6 +83,11 @@ class Recipe(Base):
     title: Mapped[str] = mapped_column(String(200))
     servings: Mapped[int]
 
+    is_user_modified: Mapped[bool] = mapped_column(
+        default=False,
+        nullable=False,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
