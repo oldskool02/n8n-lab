@@ -136,3 +136,28 @@ def update_recipe_service(
         raise
 
     return recipe
+
+
+def delete_recipe_service(
+    db: Session,
+    user_id: int,
+    recipe_id: int,
+):
+    recipe = get_user_recipe(
+        db,
+        user_id,
+        recipe_id,
+    )
+
+    if recipe is None:
+        return None
+
+    try:
+        db.delete(recipe)
+        db.commit()
+
+    except Exception:
+        db.rollback()
+        raise
+
+    return True

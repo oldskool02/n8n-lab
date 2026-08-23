@@ -10,6 +10,7 @@ from app.services.recipe_service import (
     get_user_recipe,
     create_recipe_service,
     update_recipe_service,
+    delete_recipe_service,
 )
 
 
@@ -68,6 +69,27 @@ def update_recipe(
         )
 
     return recipe
+
+
+@router.delete("/{recipe_id}", status_code=204)
+def delete_recipe(
+    recipe_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    deleted = delete_recipe_service(
+        db,
+        current_user.id,
+        recipe_id,
+    )
+
+    if deleted is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Recipe not found",
+        )
+
+    return None
 
 
 @router.post("/", response_model=RecipeResponse)
