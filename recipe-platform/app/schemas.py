@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from pydantic import BaseModel, ConfigDict
 
 
@@ -25,7 +23,7 @@ class UserResponse(BaseModel):
 
 
 class RecipeIngredientCreate(BaseModel):
-    quantity: Decimal
+    quantity: str
     unit: str
     ingredient: str
 
@@ -47,7 +45,7 @@ class RecipeIngredientResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    quantity: Decimal
+    quantity: str
     unit: str
     ingredient: str
 

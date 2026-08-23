@@ -123,7 +123,7 @@ class RecipeIngredient(Base):
         ForeignKey("recipes.id")
     )
 
-    quantity: Mapped[Decimal] = mapped_column(Numeric(10, 3))
+    quantity: Mapped[str] = mapped_column(String(50))
 
     unit: Mapped[str] = mapped_column(String(50))
 
