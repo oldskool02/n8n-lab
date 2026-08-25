@@ -1,4 +1,5 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+from uuid import UUID
 
 
 class UserCreate(BaseModel):
@@ -33,7 +34,7 @@ class RecipeStepCreate(BaseModel):
     instruction: str
 
 
-class RecipeCreate(BaseModel):
+class RecipeUpdate(BaseModel):
     title: str
     servings: int
 
@@ -68,3 +69,48 @@ class RecipeResponse(BaseModel):
 
     ingredients: list[RecipeIngredientResponse]
     steps: list[RecipeStepResponse]
+
+
+class RecipeGenerateRequest(BaseModel):
+    request: str
+    servings: int = Field(gt=0)
+    dish: str | None = None
+    diet: str | None = None
+    cuisine: str | None = None
+
+
+class GenerationCriteria(BaseModel):
+    dish: str | None
+    diet: str | None
+    cuisine: str | None
+
+
+class GeneratedRecipe(BaseModel):
+    title: str
+    servings: int
+    ingredients: list[RecipeIngredientCreate]
+    steps: list[RecipeStepCreate]
+
+
+class GeneratedImage(BaseModel):
+    generated: bool
+    file_id: str | None
+
+
+class RecipeGenerationResponse(BaseModel):
+    request_id: UUID
+    criteria: GenerationCriteria
+    recipe: GeneratedRecipe
+    image: GeneratedImage
+
+
+class RecipeGenerationRequest(BaseModel):
+    request_id: UUID
+    request: str
+    servings: int
+    dish: str | None = None
+    diet: str | None = None
+    cuisine: str | None = None
+    generate_image: bool
+
+

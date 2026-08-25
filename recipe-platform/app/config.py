@@ -33,6 +33,10 @@ JWT_SECRET_KEY = get_secret(
     os.getenv("JWT_SECRET_KEY_FILE")
 )
 
+N8N_INTERNAL_KEY = get_secret(
+    os.getenv("N8N_INTERNAL_KEY_FILE")
+)
+
 JWT_EXPIRE_MINUTES = int(
     os.getenv("JWT_EXPIRE_MINUTES")
 )

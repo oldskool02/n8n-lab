@@ -1,3 +1,7 @@
+from uuid import UUID
+
+from sqlalchemy import Uuid
+
 from datetime import datetime, timezone
 from decimal import Decimal
 
@@ -78,6 +82,12 @@ class Recipe(Base):
 
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id")
+    )
+
+    generation_request_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        unique=True,
+        nullable=False,
     )
 
     title: Mapped[str] = mapped_column(String(200))

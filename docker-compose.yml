@@ -145,6 +145,7 @@ services:
     secrets:
       - postgres_password
       - jwt_secret
+      - recipe_platform_n8n_key
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -154,6 +155,7 @@ services:
       JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret
       JWT_EXPIRE_MINUTES: "30"
       REFRESH_TOKEN_EXPIRE_DAYS: "30"
+      N8N_INTERNAL_KEY_FILE: /run/secrets/recipe_platform_n8n_key
     volumes:
       - ./recipe-platform:/app
     networks:
@@ -228,3 +230,6 @@ secrets:
 
   jwt_secret:
     file: /opt/secrets/jwt_secret
+
+  recipe_platform_n8n_key:
+    file: /opt/secrets/recipe_platform_n8n_key

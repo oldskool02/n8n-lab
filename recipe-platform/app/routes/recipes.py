@@ -4,13 +4,16 @@ from sqlalchemy.orm import Session
 from app.auth import get_current_user
 from app.database import get_db
 from app.models import User
-from app.schemas import RecipeCreate, RecipeResponse
+from app.schemas import (
+    RecipeUpdate,
+    RecipeGenerateRequest,
+    RecipeResponse)
 from app.services.recipe_service import (
+    delete_recipe_service,
+    generate_recipe_service,
     get_user_recipes,
     get_user_recipe,
-    create_recipe_service,
     update_recipe_service,
-    delete_recipe_service,
 )
 
 
@@ -26,6 +29,20 @@ def get_recipes(
     db: Session = Depends(get_db),
 ):
     return get_user_recipes(db, current_user.id)
+
+
+@router.post("/generate", response_model=RecipeResponse)
+def generate_recipe(
+    data: RecipeGenerateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return generate_recipe_service(
+        db,
+        current_user.id,
+        data,
+    )
+
 
 @router.get("/{recipe_id}", response_model=RecipeResponse)
 def get_recipe(
@@ -51,7 +68,7 @@ def get_recipe(
 @router.put("/{recipe_id}", response_model=RecipeResponse)
 def update_recipe(
     recipe_id: int,
-    data: RecipeCreate,
+    data: RecipeUpdate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -90,12 +107,3 @@ def delete_recipe(
         )
 
     return None
-
-
-@router.post("/", response_model=RecipeResponse)
-def create_recipe(
-    data: RecipeCreate,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    return create_recipe_service(db, current_user.id, data)
