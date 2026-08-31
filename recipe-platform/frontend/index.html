@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="auth-checking">
+
+    <section id="login-view" class="login-view">
+
+        <div class="login-box">
+
+            <h1>Recipe Generator</h1>
+
+            <form id="login-form">
+
+                <label for="login-email">Email</label>
+
+                <input
+                    type="email"
+                    id="login-email"
+                    required
+                    autocomplete="email"
+                >
+
+                <label for="login-password">Password</label>
+
+                <input
+                    type="password"
+                    id="login-password"
+                    required
+                    autocomplete="current-password"
+                >
+
+                <label class="show-password">
+                    <input
+                        type="checkbox"
+                        id="show-password"
+                    >
+                    Show Password
+                </label>
+
+                <div id="login-message" class="login-message"></div>
+
+                <button type="submit">
+                    Login
+                </button>
+
+            </form>
+
+        </div>
+
+    </section>
+
+
+    <div id="app-view" class="app" hidden>
+
+        <aside class="sidebar">
+
+            <h1>Recipe Generator</h1>
+
+            <form id="generate-form" novalidate>
+
+                <label for="request">Recipe request *</label>
+
+                <textarea
+                    id="request"
+                    name="request"
+                    required
+                    placeholder="What would you like to cook?"
+                ></textarea>
+
+                <label for="servings">Servings *</label>
+
+                <select id="servings" name="servings" required>
+                </select>
+
+                <label for="dish">Dish</label>
+
+                <input
+                    type="text"
+                    id="dish"
+                    name="dish"
+                    placeholder="e.g. Chicken pasta"
+                >
+
+                <label for="diet">Diet</label>
+
+                <select id="diet" name="diet">
+                </select>
+
+                <label for="cuisine">Cuisine</label>
+
+                <select id="cuisine" name="cuisine">
+                </select>
+
+                <div id="validation-message" class="validation-message"></div>
+
+                <button type="submit" id="generate-button">
+                    Generate
+                </button>
+
+            </form>
+
+            <section class="recipe-list">
+
+                <h2>My Recipes</h2>
+
+                <div id="recipes">
+                    <!-- Recipes will be loaded here -->
+                </div>
+
+            </section>
+
+        </aside>
+
+
+        <main class="main-content">
+
+            <section id="recipe-view">
+
+                <div class="empty-state">
+                    <h2>No recipe selected</h2>
+                    <p>Generate a recipe or select one from My Recipes.</p>
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <div id="error-popup" class="error-popup" hidden>
+        <div class="error-popup-content">
+            <h2>Recipe Request</h2>
+            <p id="error-popup-message"></p>
+            <button type="button" id="error-popup-ok">OK</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>

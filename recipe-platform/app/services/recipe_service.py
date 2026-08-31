@@ -14,7 +14,11 @@ from app.schemas import (
     RecipeGenerationResponse,
 )
 from app.config import N8N_INTERNAL_KEY
-from app.exceptions import RecipeFatalError, RecipeGenericError
+from app.exceptions import (
+    RecipeFatalError,
+    RecipeGenericError,
+    RecipeInvalidRequestError,
+)
 
 
 def get_user_recipes(db: Session, user_id: int):
@@ -59,7 +63,7 @@ def generate_recipe_service(
                 "X-Recipe-Platform-Key": N8N_INTERNAL_KEY,
             },
             json=generation_request.model_dump(mode="json"),
-            timeout=10,
+            timeout=60,
         )
 
     except httpx.RequestError as exc:
@@ -98,6 +102,11 @@ def generate_recipe_service(
     if generation_response.recipe.servings != data.servings:
         raise RecipeFatalError(
             "n8n returned different servings than requested"
+        )
+
+    if not generation_response.is_recipe_request:
+        raise RecipeInvalidRequestError(
+            "This is a Recipe Generator. Please specify a meal/main ingredient you want the recipe for."
         )
 
     recipe = _create_generated_recipe(

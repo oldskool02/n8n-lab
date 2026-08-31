@@ -100,6 +100,7 @@ class GeneratedImage(BaseModel):
 class RecipeGenerationResponse(BaseModel):
     request_id: UUID
     criteria: GenerationCriteria
+    is_recipe_request: bool
     recipe: GeneratedRecipe
     image: GeneratedImage
 

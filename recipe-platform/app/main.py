@@ -1,17 +1,32 @@
 import logging
 
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.exceptions import RecipeFatalError, RecipeGenericError
+from app.exceptions import (
+    RecipeFatalError,
+    RecipeGenericError,
+    RecipeInvalidRequestError,
+)
 from app.routes.recipes import router as recipes_router
 from app.routes.users import router as users_router
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8080",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +48,19 @@ def recipe_generic_error_handler(
         status_code=503,
         content={
             "detail": "Please try again later"
+        },
+    )
+
+
+@app.exception_handler(RecipeInvalidRequestError)
+def recipe_invalid_request_error_handler(
+    request,
+    exc: RecipeInvalidRequestError,
+):
+    return JSONResponse(
+        status_code=400,
+        content={
+            "detail": str(exc)
         },
     )
 
