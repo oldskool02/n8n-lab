@@ -294,6 +294,8 @@ generateForm.addEventListener("submit", async function (event) {
 
         console.log("Generated recipe:", recipe);
 
+        selectedRecipeId = recipe.id;
+
         displayRecipes(recipe);
 
         try {
@@ -431,6 +433,10 @@ async function loadRecipes() {
             recipeItem.type = "button";
             recipeItem.className = "recipe-list-item";
             recipeItem.textContent = recipe.title;
+
+            if (String(recipe.id) === String(selectedRecipeId)) {
+                recipeItem.classList.add("selected");
+            }
 
             recipeItem.addEventListener("click", function () {
                 selectedRecipeId = recipe.id;
