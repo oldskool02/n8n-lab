@@ -436,6 +436,10 @@ async function loadRecipes() {
 
             if (String(recipe.id) === String(selectedRecipeId)) {
                 recipeItem.classList.add("selected");
+
+                recipeItem.scrollIntoView({
+                    block: "nearest"
+                });
             }
 
             recipeItem.addEventListener("click", function () {

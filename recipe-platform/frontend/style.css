@@ -88,6 +88,12 @@ button {
     padding-top: 4px;
 }
 
+.recipe-list h2 {
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
 #recipes {
     display: flex;
     flex-direction: column;
@@ -110,6 +116,7 @@ button {
     text-align: left;
     cursor: pointer;
     font-weight: normal;
+    line-height: 1.3;
 }
 
 .recipe-list-item:hover {
@@ -119,6 +126,7 @@ button {
 .recipe-list-item.selected {
     background: #e9e9e9;
     font-weight: 600;
+    box-shadow: inset 4px 0 0 #222;
 }
 
 .main-content {
