@@ -339,10 +339,6 @@ function displayRecipes(recipe) {
 
     recipeView.innerHTML = "";
 
-    const imagePlaceholder = document.createElement("div");
-    imagePlaceholder.className = "recipe-image-placeholder";
-    imagePlaceholder.textContent = "Recipe Image";
-    recipeView.appendChild(imagePlaceholder);
 
     const title = document.createElement("h2");
     title.textContent = recipe.title;
