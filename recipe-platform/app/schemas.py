@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from uuid import UUID
 
 
@@ -35,7 +35,6 @@ class RecipeStepCreate(BaseModel):
 
 
 class RecipeUpdate(BaseModel):
-    title: str
     servings: int
 
     ingredients: list[RecipeIngredientCreate]
@@ -65,6 +64,10 @@ class RecipeResponse(BaseModel):
     id: int
     title: str
     servings: int
+    dish: str | None
+    diet: str | None
+    cuisine: str | None
+    image_file_id: str | None
     is_user_modified: bool
 
     ingredients: list[RecipeIngredientResponse]
@@ -72,7 +75,26 @@ class RecipeResponse(BaseModel):
 
 
 class RecipeGenerateRequest(BaseModel):
-    request: str
+    request: str = Field(min_length=6)
+    servings: int = Field(gt=0)
+    dish: str | None = None
+    diet: str | None = None
+    cuisine: str | None = None
+
+    @field_validator("request", mode="before")
+    @classmethod
+    def validate_request(cls, value: str) -> str:
+        value = value.strip()
+
+        if len(value) < 6:
+            raise ValueError(
+                "Request must be at least 6 characters long"
+            )
+
+        return value
+
+
+class RecipeRegenerateRequest(BaseModel):
     servings: int = Field(gt=0)
     dish: str | None = None
     diet: str | None = None
@@ -90,6 +112,21 @@ class GeneratedRecipe(BaseModel):
     servings: int
     ingredients: list[RecipeIngredientCreate]
     steps: list[RecipeStepCreate]
+
+
+class RecipeRegenerationRequest(BaseModel):
+    request_id: UUID
+    title: str
+    current_recipe: GeneratedRecipe
+    servings: int
+    dish: str | None = None
+    diet: str | None = None
+    cuisine: str | None = None
+
+
+class RecipeRegenerationResponse(BaseModel):
+    request_id: UUID
+    recipe: GeneratedRecipe
 
 
 class GeneratedImage(BaseModel):
@@ -113,5 +150,3 @@ class RecipeGenerationRequest(BaseModel):
     diet: str | None = None
     cuisine: str | None = None
     generate_image: bool
-
-

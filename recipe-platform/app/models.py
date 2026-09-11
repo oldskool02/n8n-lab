@@ -5,7 +5,13 @@ from sqlalchemy import Uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy import DateTime, ForeignKey, Numeric, String
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    Numeric,
+    String,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -92,6 +98,14 @@ class Recipe(Base):
 
     title: Mapped[str] = mapped_column(String(200))
     servings: Mapped[int]
+    dish = Column(String(200), nullable=True)
+    diet = Column(String(100), nullable=True)
+    cuisine = Column(String(100), nullable=True)
+
+    image_file_id: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
 
     is_user_modified: Mapped[bool] = mapped_column(
         default=False,

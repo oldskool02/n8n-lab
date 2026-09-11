@@ -7,6 +7,12 @@ const validationMessage = document.getElementById("validation-message");
 const generateButton = document.getElementById("generate-button");
 
 let selectedRecipeId = null;
+let savedCriteria = {
+    servings: 2,
+    dish: "",
+    diet: "",
+    cuisine: "",
+}
 
 const errorPopup = document.getElementById("error-popup");
 const errorPopupMessage = document.getElementById("error-popup-message");
@@ -16,6 +22,15 @@ const errorPopupOk = document.getElementById("error-popup-ok");
 errorPopupOk.addEventListener("click", function() {
     errorPopup.hidden = true;
 });
+
+function criteriaChanged() {
+    return (
+        Number(servingsSelect.value) !== savedCriteria.servings ||
+        document.getElementById("dish").value.trim() !== savedCriteria.dish ||
+        dietSelect.value !== savedCriteria.diet ||
+        cuisineSelect.value !== savedCriteria.cuisine
+    );
+}
 
 function startNewGeneration() {
     selectedRecipeId = null;
@@ -41,7 +56,7 @@ function startNewGeneration() {
         </div>
     `;
 
-    generateButton.textContent = "Generate";
+    updateGenerateButton();
 
 }
 
@@ -204,15 +219,18 @@ for (const cuisine of cuisines) {
 generateForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
+    const isRegeneration =
+        selectedRecipeId !== null && criteriaChanged();
+
     validationMessage.textContent = "";
     validationMessage.style.color = "";
 
     const request = requestInput.value.trim();
     const servings = Number(servingsSelect.value);
 
-    if (!request) {
+    if (!isRegeneration && request.length < 6) {
         showErrorPopup(
-            "Please enter a recipe request"
+            "Please enter a recipe request that is at least 6 characters"
         );
 
         requestInput.focus();
@@ -243,25 +261,40 @@ generateForm.addEventListener("submit", async function (event) {
 
     generateButton.disabled = true;
 
-    validationMessage.textContent = "Generating recipe...";
+    validationMessage.textContent =
+        isRegeneration
+            ? "Regenerating recipe..."
+            : "Generating recipe...";
+
     validationMessage.style.color = "green";
 
     try {
         const response = await fetch(
-            "http://localhost:8001/recipes/generate",
+            isRegeneration
+                ? `http://localhost:8001/recipes/${selectedRecipeId}`
+                : "http://localhost:8001/recipes/generate",
             {
-                method: "POST",
+                method: isRegeneration ?"PUT" : "POST",
                 headers: {
                     "Authorization": `Bearer ${accessToken}`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    request: request,
-                    servings: servings,
-                    dish: document.getElementById("dish").value.trim() || null,
-                    diet: dietSelect.value || null,
-                    cuisine: cuisineSelect.value || null,
-                }),
+                body: JSON.stringify(
+                    isRegeneration
+                        ? {
+                            servings: servings,
+                            dish: document.getElementById("dish").value.trim() || null,
+                            diet: dietSelect.value || null,
+                            cuisine: cuisineSelect.value || null,
+                        }
+                        : {
+                            request: request,
+                            servings: servings,
+                            dish: document.getElementById("dish").value.trim() || null,
+                            diet: dietSelect.value || null,
+                            cuisine: cuisineSelect.value || null,
+                        }
+                ),
             }
         );
 
@@ -280,13 +313,13 @@ generateForm.addEventListener("submit", async function (event) {
 
             validationMessage.textContent = message;
             validationMessage.style.color = "red";
+            if (!isRegeneration) {
+                generateForm.reset();
 
-            generateForm.reset();
-
-            servingsSelect.value = 2;
-            dietSelect.value = "";
-            cuisineSelect.value = "";
-
+                servingsSelect.value = 2;
+                dietSelect.value = "";
+                cuisineSelect.value = "";
+            }
             return;
         }
 
@@ -304,36 +337,123 @@ generateForm.addEventListener("submit", async function (event) {
             console.error("Loading My Recipes failed", error)
         }
 
-        generateForm.reset();
+        requestInput.value = "";
 
-        servingsSelect.value = "2";
-        dietSelect.value = "";
-        cuisineSelect.value = "";
+        validationMessage.textContent =
+            isRegeneration
+                ? "Recipe regenerated successfully."
+                : "Recipe generated successfully."
 
-        validationMessage.textContent = "Recipe generated successfully.";
         validationMessage.style.color = "green";
+
     } catch (error) {
         console.error("Recipe generation failed:", error);
 
         validationMessage.textContent = "Could not connect to the server.";
         validationMessage.style.color = "red";
     } finally {
-        generateButton.disabled = false
+        updateGenerateButton();
     }
 
 });
 
 generateButton.addEventListener("click", function(event) {
-    if (selectedRecipeId !== null) {
+    if (selectedRecipeId !== null && !criteriaChanged()) {
         event.preventDefault();
         startNewGeneration();
     }
 });
 
+function updateGenerateButton() {
+    if (selectedRecipeId === null) {
+        generateButton.textContent = "Generate";
+        generateButton.disabled = requestInput.value.trim().length < 6;
+        return;
+    }
+
+    if (criteriaChanged()) {
+        generateButton.textContent = "Regenerate";
+        generateButton.disabled = false;
+    } else {
+        generateButton.textContent = "New Generation";
+        generateButton.disabled = false;
+    }
+}
+
+servingsSelect.addEventListener("change", updateGenerateButton);
+dietSelect.addEventListener("change", updateGenerateButton);
+cuisineSelect.addEventListener("change", updateGenerateButton);
+
+document
+    .getElementById("dish")
+    .addEventListener("input", updateGenerateButton);
+
+requestInput.addEventListener("input", function () {
+    const request = requestInput.value.trim();
+
+    if (selectedRecipeId !== null && request) {
+        startNewGeneration();
+        requestInput.value = request;
+    }
+
+    updateGenerateButton();
+});
+
+async function loadRecipeImage(recipeImage, recipe) {
+    if (!recipe.image_file_id) {
+        return;
+    }
+
+    const accessToken = sessionStorage.getItem("access_token");
+
+    if (!accessToken) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `http://localhost:8001/recipes/${recipe.id}/image`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${accessToken}`
+                },
+            }
+        );
+
+        if (!response.ok) {
+            recipeImage.src = "images/recipe-fallback.png";
+            recipeImage.style.visibility = "visible";
+            return;
+        }
+
+        const imageBlob = await response.blob();
+        recipeImage.src = URL.createObjectURL(imageBlob);
+        recipeImage.style.visibility = "visible";
+
+    } catch (error) {
+        console.error("Could not load recipe image", error);
+        recipeImage.src = "images/recipe-fallback.png";
+        recipeImage.style.visibility = "visible";
+    }
+}
+
 function displayRecipes(recipe) {
     const recipeView = document.getElementById("recipe-view");
 
     selectedRecipeId = recipe.id;
+
+    savedCriteria = {
+        servings: recipe.servings,
+        dish: recipe.dish || "",
+        diet: recipe.diet || "",
+        cuisine: recipe.cuisine || "",
+    }
+
+    servingsSelect.value = String(recipe.servings);
+    document.getElementById("dish").value = recipe.dish || "";
+    dietSelect.value = recipe.diet || "";
+    cuisineSelect.value = recipe.cuisine || "";
 
     generateButton.textContent = "New Generation";
 
@@ -343,6 +463,20 @@ function displayRecipes(recipe) {
     const title = document.createElement("h2");
     title.textContent = recipe.title;
     recipeView.appendChild(title);
+
+    const recipeImage = document.createElement("img");
+
+    if (recipe.image_file_id) {
+        recipeImage.style.visibility = "hidden";
+    } else {
+        recipeImage.src = "images/recipe-fallback.png";
+    }
+
+    recipeImage.alt = recipe.title;
+    recipeImage.className = "recipe-image";
+    recipeView.appendChild(recipeImage);
+
+    loadRecipeImage(recipeImage, recipe);
 
     const servings = document.createElement("p");
     servings.textContent = `Servings: ${recipe.servings}`;
@@ -384,7 +518,116 @@ function displayRecipes(recipe) {
 
     recipeView.appendChild(stepsList);
 
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.id = "delete-recipe-button";
+    deleteButton.textContent = "Delete Recipe";
+
+    recipeView.appendChild(deleteButton);
+
+    deleteButton.addEventListener("click", function () {
+        const deletePopup = document.getElementById("delete-popup");
+        const deletePopupMessage =
+            document.getElementById("delete-popup-message");
+        const deletePopupCancel =
+            document.getElementById("delete-popup-cancel");
+
+            deletePopupMessage.innerHTML = `
+                <span>Are you sure you want to delete:</span>
+                <span>"${recipe.title}"?</span>
+                <strong>This action cannot be undone.</strong
+            `;
+            deletePopup.hidden = false;
+            deletePopupCancel.focus();
+    });
+
 }
+
+document
+    .getElementById("delete-popup-cancel")
+    .addEventListener("click", function () {
+        document.getElementById("delete-popup").hidden = true;
+    });
+
+document
+    .getElementById("delete-popup")
+    .addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+
+                document.getElementById("delete-popup").hidden = true
+           }
+    });
+
+document
+    .getElementById("delete-popup-confirm")
+    .addEventListener("click", async function () {
+        const recipeView = document.getElementById("recipe-view");
+
+        const accessToken = sessionStorage.getItem("access_token");
+
+        if (!accessToken || selectedRecipeId === null) {
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `http://localhost:8001/recipes/${selectedRecipeId}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `Bearer ${accessToken}`,
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Could not delete recipe");
+            }
+
+            document.getElementById("delete-popup").hidden = true;
+
+            selectedRecipeId = null;
+
+            generateForm.reset();
+
+            servingsSelect.value = 2;
+
+            dietSelect.value = "";
+            cuisineSelect.value = "";
+
+            savedCriteria = {
+                servings: 2,
+                dish: "",
+                diet: "",
+                cuisine: "",
+            };
+
+            recipeView.innerHTML = `
+                <div class="empty-state">
+                    <h2>No recipe selected</h2>
+                    <p>Generate a recipe or select one from My Recipes.</p>
+                </div>
+            `;
+
+            updateGenerateButton();
+
+            await loadRecipes();
+
+            validationMessage.textContent =
+                "Recipe deleted successfully.";
+            validationMessage.style.color = "green"
+
+    } catch (error) {
+        console.error("Recipe deletion failed:", error);
+
+        document.getElementById("delete-popup").hidden = true;
+
+        validationMessage.textContent =
+            "Could not delete the recipe.";
+        validationMessage.style.color = "red"
+    }
+});
 
 async function loadRecipes() {
     const accessToken = sessionStorage.getItem("access_token");
@@ -440,6 +683,7 @@ async function loadRecipes() {
 
             recipeItem.addEventListener("click", function () {
                 selectedRecipeId = recipe.id;
+                requestInput.value = "";
 
                 document
                     .querySelectorAll(".recipe-list-item")

@@ -149,6 +149,10 @@ button {
     overflow-y: auto;
 }
 
+#recipe-view h2 {
+    text-align: center;
+}
+
 .empty-state {
     padding: 60px 20px;
     text-align: center;
@@ -276,11 +280,56 @@ button {
     margin-top: 20px;
 }
 
+#delete-popup-message span,
+#delete-popup-message strong {
+    display: block;
+    text-align: center;
+}
+
+#delete-pop-message strong {
+    margin-top: 8px;
+}
+
 #error-popup-ok {
     width: auto;
     min-width: 100px;
     margin-top: 0;
     padding: 10px 20px;
     background: #222;
+    color: white;
+}
+
+#delete-popup-cancel {
+    width: auto;
+    min-width: 100px;
+    margin-top: 0;
+    padding: 10px 20px;
+    background: #222;
+    color: white;
+}
+
+#delete-popup-confirm {
+    width: auto;
+    min-width: 100px;
+    margin-top: 0;
+    padding: 10px 20px;
+    background: #c62828;
+    color: white;
+}
+
+.recipe-image {
+    display: block;
+    width: 100%;
+    max-width: 480px;
+    height: auto;
+    margin: 20px auto;
+    border-radius: 8px;
+}
+
+#delete-recipe-button {
+    width: auto;
+    padding: 8px 18px;
+    margin-top: 20px;
+    background-color: #c62828;
     color: white;
 }

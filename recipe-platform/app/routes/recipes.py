@@ -1,20 +1,28 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Response,
+)
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
 from app.database import get_db
 from app.models import User
 from app.schemas import (
-    RecipeUpdate,
     RecipeGenerateRequest,
-    RecipeResponse)
+    RecipeRegenerateRequest,
+    RecipeResponse,
+)
 from app.services.recipe_service import (
     delete_recipe_service,
     generate_recipe_service,
+    get_recipe_image_service,
     get_user_recipes,
     get_user_recipe,
-    update_recipe_service,
+    regenerate_recipe_service,
 )
+from app.services.pdf_service import create_recipe_pdf
 
 
 router = APIRouter(
@@ -65,14 +73,78 @@ def get_recipe(
     return recipe
 
 
-@router.put("/{recipe_id}", response_model=RecipeResponse)
-def update_recipe(
+@router.get("/{recipe_id}/image")
+def get_recipe_image(
     recipe_id: int,
-    data: RecipeUpdate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    recipe = update_recipe_service(
+    image_response = get_recipe_image_service(
+        db,
+        current_user.id,
+        recipe_id,
+    )
+
+    if image_response is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Recipe image not found",
+        )
+
+    return Response(
+        content=image_response.content,
+        media_type=image_response.headers.get(
+            "Content-Type",
+            "image/png",
+        ),
+    )
+
+
+@router.get("/{recipe_id}/pdf")
+def get_recipe_pdf(
+    recipe_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    recipe = get_user_recipe(
+        db,
+        current_user.id,
+        recipe_id,
+    )
+
+    if recipe is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Recipe not found",
+        )
+
+    image_response = get_recipe_image_service(
+        db,
+        current_user.id,
+        recipe_id,
+    )
+
+    if image_response is not None:
+        image_bytes = image_response.content
+    else:
+        image_bytes = None
+
+    pdf_bytes = create_recipe_pdf(recipe, image_bytes)
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+    )
+
+
+@router.put("/{recipe_id}", response_model=RecipeResponse)
+def update_recipe(
+    recipe_id: int,
+    data: RecipeRegenerateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    recipe = regenerate_recipe_service(
         db,
         current_user.id,
         recipe_id,
