@@ -98,7 +98,7 @@ loginForm.addEventListener("submit", async function (event) {
 
     try {
         const response = await fetch(
-            "http://localhost:8001/users/login",
+            "/users/login",
             {
                 method: "POST",
                 headers: {
@@ -271,8 +271,8 @@ generateForm.addEventListener("submit", async function (event) {
     try {
         const response = await fetch(
             isRegeneration
-                ? `http://localhost:8001/recipes/${selectedRecipeId}`
-                : "http://localhost:8001/recipes/generate",
+                ? `/recipes/${selectedRecipeId}`
+                : "/recipes/generate",
             {
                 method: isRegeneration ?"PUT" : "POST",
                 headers: {
@@ -412,7 +412,7 @@ async function loadRecipeImage(recipeImage, recipe) {
 
     try {
         const response = await fetch(
-            `http://localhost:8001/recipes/${recipe.id}/image`,
+            `/recipes/${recipe.id}/image`,
             {
                 method: "GET",
                 headers: {
@@ -535,7 +535,7 @@ function displayRecipes(recipe) {
             deletePopupMessage.innerHTML = `
                 <span>Are you sure you want to delete:</span>
                 <span>"${recipe.title}"?</span>
-                <strong>This action cannot be undone.</strong
+                <strong>This action cannot be undone.</strong>
             `;
             deletePopup.hidden = false;
             deletePopupCancel.focus();
@@ -572,7 +572,7 @@ document
 
         try {
             const response = await fetch(
-                `http://localhost:8001/recipes/${selectedRecipeId}`,
+                `/recipes/${selectedRecipeId}`,
                 {
                     method: "DELETE",
                     headers: {
@@ -638,7 +638,7 @@ async function loadRecipes() {
 
     try {
         const response = await fetch(
-            "http://localhost:8001/recipes/",
+            "/recipes/",
             {
                 method: "GET",
                 headers: {
