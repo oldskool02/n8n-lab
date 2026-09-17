@@ -64,7 +64,6 @@ class RecipeResponse(BaseModel):
     id: int
     title: str
     servings: int
-    dish: str | None
     diet: str | None
     cuisine: str | None
     image_file_id: str | None
@@ -77,7 +76,6 @@ class RecipeResponse(BaseModel):
 class RecipeGenerateRequest(BaseModel):
     request: str = Field(min_length=6)
     servings: int = Field(gt=0)
-    dish: str | None = None
     diet: str | None = None
     cuisine: str | None = None
 
@@ -96,13 +94,11 @@ class RecipeGenerateRequest(BaseModel):
 
 class RecipeRegenerateRequest(BaseModel):
     servings: int = Field(gt=0)
-    dish: str | None = None
     diet: str | None = None
     cuisine: str | None = None
 
 
 class GenerationCriteria(BaseModel):
-    dish: str | None
     diet: str | None
     cuisine: str | None
 
@@ -119,7 +115,6 @@ class RecipeRegenerationRequest(BaseModel):
     title: str
     current_recipe: GeneratedRecipe
     servings: int
-    dish: str | None = None
     diet: str | None = None
     cuisine: str | None = None
 
@@ -146,7 +141,6 @@ class RecipeGenerationRequest(BaseModel):
     request_id: UUID
     request: str
     servings: int
-    dish: str | None = None
     diet: str | None = None
     cuisine: str | None = None
     generate_image: bool

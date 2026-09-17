@@ -333,3 +333,21 @@ button {
     background-color: #c62828;
     color: white;
 }
+
+#recipe-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+#recipe-actions button {
+    width: auto;
+    margin-top: 0;
+}
+
+#download-pdf-button {
+    background: #222;
+    color: white;
+    padding: 8px 18px;
+}

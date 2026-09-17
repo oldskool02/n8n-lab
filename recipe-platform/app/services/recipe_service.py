@@ -70,7 +70,6 @@ def regenerate_recipe_service(
             ],
         },
         servings=data.servings,
-        dish=data.dish,
         diet=data.diet,
         cuisine=data.cuisine,
     )
@@ -124,7 +123,6 @@ def regenerate_recipe_service(
 
     recipe.servings = regeneration_response.recipe.servings
     recipe.is_user_modified = True
-    recipe.dish = data.dish
     recipe.diet = data.diet
     recipe.cuisine = data.cuisine
 
@@ -189,7 +187,6 @@ def generate_recipe_service(
         request_id=request_id,
         request=data.request,
         servings=data.servings,
-        dish=data.dish,
         diet=data.diet,
         cuisine=data.cuisine,
         generate_image=False,
@@ -262,7 +259,6 @@ def generate_recipe_service(
             },
             json={
                 "title": recipe.title,
-                "dish": recipe.dish,
                 "diet": recipe.diet,
                 "cuisine": recipe.cuisine,
             },
@@ -424,7 +420,6 @@ def _create_generated_recipe(
         generation_request_id=generation_response.request_id,
         title=generation_response.recipe.title,
         servings=generation_response.recipe.servings,
-        dish = generation_response.criteria.dish,
         diet = generation_response.criteria.diet,
         cuisine = generation_response.criteria.cuisine,
         image_file_id = generation_response.image.file_id,

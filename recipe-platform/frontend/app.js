@@ -9,7 +9,6 @@ const generateButton = document.getElementById("generate-button");
 let selectedRecipeId = null;
 let savedCriteria = {
     servings: 2,
-    dish: "",
     diet: "",
     cuisine: "",
 }
@@ -26,7 +25,6 @@ errorPopupOk.addEventListener("click", function() {
 function criteriaChanged() {
     return (
         Number(servingsSelect.value) !== savedCriteria.servings ||
-        document.getElementById("dish").value.trim() !== savedCriteria.dish ||
         dietSelect.value !== savedCriteria.diet ||
         cuisineSelect.value !== savedCriteria.cuisine
     );
@@ -283,14 +281,12 @@ generateForm.addEventListener("submit", async function (event) {
                     isRegeneration
                         ? {
                             servings: servings,
-                            dish: document.getElementById("dish").value.trim() || null,
                             diet: dietSelect.value || null,
                             cuisine: cuisineSelect.value || null,
                         }
                         : {
                             request: request,
                             servings: servings,
-                            dish: document.getElementById("dish").value.trim() || null,
                             diet: dietSelect.value || null,
                             cuisine: cuisineSelect.value || null,
                         }
@@ -384,10 +380,6 @@ servingsSelect.addEventListener("change", updateGenerateButton);
 dietSelect.addEventListener("change", updateGenerateButton);
 cuisineSelect.addEventListener("change", updateGenerateButton);
 
-document
-    .getElementById("dish")
-    .addEventListener("input", updateGenerateButton);
-
 requestInput.addEventListener("input", function () {
     const request = requestInput.value.trim();
 
@@ -445,13 +437,11 @@ function displayRecipes(recipe) {
 
     savedCriteria = {
         servings: recipe.servings,
-        dish: recipe.dish || "",
         diet: recipe.diet || "",
         cuisine: recipe.cuisine || "",
     }
 
     servingsSelect.value = String(recipe.servings);
-    document.getElementById("dish").value = recipe.dish || "";
     dietSelect.value = recipe.diet || "";
     cuisineSelect.value = recipe.cuisine || "";
 
@@ -518,12 +508,63 @@ function displayRecipes(recipe) {
 
     recipeView.appendChild(stepsList);
 
+    const recipeActions = document.createElement("div");
+
+    recipeActions.id = "recipe-actions";
+
+    recipeView.appendChild(recipeActions);
+
+    const pdfButton = document.createElement("button");
+    pdfButton.type = "button";
+    pdfButton.id = "download-pdf-button";
+    pdfButton.textContent = "Download PDF";
+
+    recipeActions.appendChild(pdfButton);
+
+    pdfButton.addEventListener("click", async function() {
+        const accessToken = sessionStorage.getItem("access_token");
+
+        if (!accessToken) {
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `/recipes/${recipe.id}/pdf`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Authorization": `Bearer ${accessToken}`,
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to download PDF");
+            }
+
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `${recipe.title}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("PDF download failed:", error);
+        }
+    });
+
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
     deleteButton.id = "delete-recipe-button";
     deleteButton.textContent = "Delete Recipe";
 
-    recipeView.appendChild(deleteButton);
+    recipeActions.appendChild(deleteButton);
 
     deleteButton.addEventListener("click", function () {
         const deletePopup = document.getElementById("delete-popup");
@@ -598,7 +639,6 @@ document
 
             savedCriteria = {
                 servings: 2,
-                dish: "",
                 diet: "",
                 cuisine: "",
             };

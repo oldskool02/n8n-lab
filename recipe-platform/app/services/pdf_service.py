@@ -56,7 +56,6 @@ def create_recipe_pdf(recipe, image_bytes=None):
         image,
         Paragraph(recipe.title, styles["Title"]),
         Paragraph(f"Servings: {recipe.servings}", styles["Normal"]),
-        Paragraph(f"Dish: {recipe.dish}", styles["Normal"]),
         Paragraph(f"Diet: {recipe.diet}", styles["Normal"]),
         Paragraph(f"Cuisine: {recipe.cuisine}", styles["Normal"]),
         Paragraph("Ingredients:", styles["Heading2"]),
