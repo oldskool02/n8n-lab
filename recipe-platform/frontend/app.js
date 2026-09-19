@@ -449,10 +449,22 @@ function displayRecipes(recipe) {
 
     recipeView.innerHTML = "";
 
+    const recipeCard = document.createElement("div");
+    recipeCard.className = "recipe-card";
+    recipeView.appendChild(recipeCard);
+
+    const recipeImageColumn = document.createElement("div");
+    recipeImageColumn.className = "recipe-card-image";
+    recipeCard.appendChild(recipeImageColumn);
+
+    const recipeDetails = document.createElement("div");
+    recipeDetails.className = "recipe-details";
+    recipeCard.appendChild(recipeDetails);
+
 
     const title = document.createElement("h2");
     title.textContent = recipe.title;
-    recipeView.appendChild(title);
+    recipeDetails.appendChild(title);
 
     const recipeImage = document.createElement("img");
 
@@ -464,17 +476,17 @@ function displayRecipes(recipe) {
 
     recipeImage.alt = recipe.title;
     recipeImage.className = "recipe-image";
-    recipeView.appendChild(recipeImage);
+    recipeImageColumn.appendChild(recipeImage);
 
     loadRecipeImage(recipeImage, recipe);
 
     const servings = document.createElement("p");
     servings.textContent = `Servings: ${recipe.servings}`;
-    recipeView.appendChild(servings);
+    recipeDetails.appendChild(servings);
 
     const ingredientsHeading = document.createElement("h3");
     ingredientsHeading.textContent = "Ingredients";
-    recipeView.appendChild(ingredientsHeading);
+    recipeDetails.appendChild(ingredientsHeading);
 
     const ingredientsList = document.createElement("ul");
 
@@ -490,11 +502,11 @@ function displayRecipes(recipe) {
         ingredientsList.appendChild(ingredientItem);
     }
 
-    recipeView.appendChild(ingredientsList);
+    recipeDetails.appendChild(ingredientsList);
 
     const stepHeading = document.createElement("h3");
     stepHeading.textContent = "Method";
-    recipeView.appendChild(stepHeading);
+    recipeDetails.appendChild(stepHeading);
 
     const stepsList = document.createElement("ol");
 
@@ -506,13 +518,13 @@ function displayRecipes(recipe) {
         stepsList.appendChild(stepItem);
     }
 
-    recipeView.appendChild(stepsList);
+    recipeDetails.appendChild(stepsList);
 
     const recipeActions = document.createElement("div");
 
     recipeActions.id = "recipe-actions";
 
-    recipeView.appendChild(recipeActions);
+    recipeDetails.appendChild(recipeActions);
 
     const pdfButton = document.createElement("button");
     pdfButton.type = "button";

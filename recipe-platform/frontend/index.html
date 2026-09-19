@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recipe Generator</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -58,72 +59,132 @@
 
     <div id="app-view" class="app" hidden>
 
-        <aside class="sidebar">
+        <header class="site-header">
 
-            <h1>Recipe Generator</h1>
+            <div class="site-brand">
+                <div class="site-brand-mark">✿</div>
 
-            <form id="generate-form" novalidate>
+                <div>
+                    <h1>Ouma's Old Skool Kitchen</h1>
+                    <p>South African recipes for a home away from home</p>
+                </div>
+            </div>
 
-                <label for="request">Recipe request *</label>
+            <div class="site-tagline">
+                Recipes made with love,<br>
+                just like Ouma used to make.
+            </div>
 
-                <textarea
-                    id="request"
-                    name="request"
-                    required
-                    placeholder="What would you like to cook?"
-                ></textarea>
+        </header>
 
-                <label for="servings">Servings *</label>
 
-                <select id="servings" name="servings" required>
-                </select>
+        <section class="hero-section">
 
-                <label for="diet">Diet</label>
+            <div class="hero-content">
 
-                <select id="diet" name="diet">
-                </select>
+                <p class="hero-eyebrow">
+                    HOMEMADE • TRADITIONAL • SOUTH AFRICAN
+                </p>
 
-                <label for="cuisine">Cuisine</label>
+                <h2>
+                    What meal is the one meal<br>
+                    that you miss from home?
+                </h2>
 
-                <select id="cuisine" name="cuisine">
-                </select>
+                <form id="generate-form" novalidate>
 
-                <div id="validation-message" class="validation-message"></div>
+                    <div class="request-row">
 
-                <button type="submit" id="generate-button">
-                    Generate
-                </button>
+                        <textarea
+                            id="request"
+                            name="request"
+                            required
+                            placeholder="Tell us what you'd like to cook..."
+                        ></textarea>
 
-            </form>
+                        <button type="submit" id="generate-button">
+                            Generate
+                        </button>
 
-            <section class="recipe-list">
+                    </div>
 
-                <h2>My Recipes</h2>
+
+                    <div class="generation-options">
+
+                        <div class="form-field">
+
+                            <label for="servings">
+                                Servings
+                            </label>
+
+                            <select id="servings" name="servings" required>
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-field">
+
+                            <label for="diet">
+                                Diet
+                            </label>
+
+                            <select id="diet" name="diet">
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-field">
+
+                            <label for="cuisine">
+                                Cuisine
+                            </label>
+
+                            <select id="cuisine" name="cuisine">
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <div id="validation-message" class="validation-message"></div>
+
+                </form>
+
+            </div>
+
+        </section>
+
+
+        <main class="recipe-content">
+
+            <aside class="recipe-list">
+
+                <div class="recipe-list-header">
+
+                    <h2>My Recipes</h2>
+
+                </div>
 
                 <div id="recipes">
                     <!-- Recipes will be loaded here -->
                 </div>
 
-            </section>
+            </aside>
 
-        </aside>
-
-
-        <main class="main-content">
-
-            <div class="recipe-image-container">
-                <img
-                    src="/images/recipe-kitchen.png"
-                    alt="Chef preparing food in a home kitchen"
-                    class="recipe-image"
-                >
-            </div>
 
             <section id="recipe-view">
 
                 <div class="empty-state">
+
                     <h2>No recipe selected</h2>
-                    <p>Generate a recipe or select one from My Recipes.</p>
+
+                    <p>
+                        Generate a recipe or select one from My Recipes.
+                    </p>
+
                 </div>
 
             </section>
