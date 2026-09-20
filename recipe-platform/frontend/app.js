@@ -72,8 +72,108 @@ const loginMessage = document.getElementById("login-message");
 
 const loginView = document.getElementById("login-view");
 const appView = document.getElementById("app-view");
+const logoutButton = document.getElementById("logout-button")
 
 
+function clearSession() {
+    sessionStorage.removeItem("access_token");
+    sessionStorage.removeItem("refresh_token");
+
+    loginView.hidden = false;
+    appView.hidden = true;
+}
+
+function handleSessionExpired() {
+    clearSession();
+}
+
+function logout() {
+    clearSession();
+}
+
+async function authenticatedFetch(url, options={}) {
+    const accessToken = sessionStorage.getItem("access_token");
+
+    if (!accessToken) {
+        throw new Error("No access token");
+    }
+
+    const headers = {
+        ...(options.headers || {}),
+        "Authorization": `Bearer ${accessToken}`,
+    };
+
+    let response = await fetch(
+        url,
+        {
+            ...options,
+            headers: headers,
+        }
+    );
+
+    if (response.status !== 401) {
+        return response;
+    }
+
+    const refreshed = await refreshAccessToken();
+
+    if (!refreshed) {
+        return response;
+    }
+
+    const newAccessToken = sessionStorage.getItem("access_token");
+
+    const retryHeaders = {
+        ...(options.headers || {}),
+        "Authorization": `Bearer ${newAccessToken}`,
+    };
+
+    response = await fetch(
+        url,
+        {
+            ...options,
+            headers: retryHeaders,
+        }
+    );
+
+    return response;
+}
+
+async function refreshAccessToken() {
+    const refreshToken = sessionStorage.getItem("refresh_token");
+
+    if (!refreshToken) {
+        return false;
+    }
+
+    const response = await fetch(
+        "/users/refresh",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                refresh_token: refreshToken,
+            }),
+        }
+    );
+
+    if (!response.ok) {
+        return false;
+    }
+
+    const data = await response.json();
+
+    sessionStorage.setItem(
+        "access_token",
+        data.access_token,
+    );
+
+    return true;
+}
+
+logoutButton.addEventListener("click", logout);
 
 /*
 * Show Password
@@ -127,7 +227,7 @@ loginForm.addEventListener("submit", async function (event) {
 
         sessionStorage.setItem(
             "refresh_token",
-            data.refresh_token
+            data.refresh_token,
         );
 
         loginView.hidden = true;
@@ -267,7 +367,7 @@ generateForm.addEventListener("submit", async function (event) {
     validationMessage.style.color = "green";
 
     try {
-        const response = await fetch(
+        const response = await authenticatedFetch(
             isRegeneration
                 ? `/recipes/${selectedRecipeId}`
                 : "/recipes/generate",
@@ -403,7 +503,7 @@ async function loadRecipeImage(recipeImage, recipe) {
     }
 
     try {
-        const response = await fetch(
+        const response = await authenticatedFetch(
             `/recipes/${recipe.id}/image`,
             {
                 method: "GET",
@@ -541,7 +641,7 @@ function displayRecipes(recipe) {
         }
 
         try {
-            const response = await fetch(
+            const response = await authenticatedFetch(
                 `/recipes/${recipe.id}/pdf`,
                 {
                     method: "GET",
@@ -590,6 +690,7 @@ function displayRecipes(recipe) {
                 <span>"${recipe.title}"?</span>
                 <strong>This action cannot be undone.</strong>
             `;
+            deletePopup.dataset.recipeTitle = recipe.title;
             deletePopup.hidden = false;
             deletePopupCancel.focus();
     });
@@ -624,7 +725,7 @@ document
         }
 
         try {
-            const response = await fetch(
+            const response = await authenticatedFetch(
                 `/recipes/${selectedRecipeId}`,
                 {
                     method: "DELETE",
@@ -667,7 +768,7 @@ document
             await loadRecipes();
 
             validationMessage.textContent =
-                "Recipe deleted successfully.";
+                `Recipe "${document.getElementById("delete-popup").dataset.recipeTitle}" deleted successfully`
             validationMessage.style.color = "green"
 
     } catch (error) {
@@ -689,7 +790,7 @@ async function loadRecipes() {
     }
 
     try {
-        const response = await fetch(
+        const response = await authenticatedFetch(
             "/recipes/",
             {
                 method: "GET",
@@ -706,6 +807,7 @@ async function loadRecipes() {
             );
 
             if (response.status === 401) {
+                handleSessionExpired();
                 return false;
             }
 
