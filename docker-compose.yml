@@ -161,6 +161,9 @@ services:
       context: ./recipe-platform
       dockerfile: Dockerfile.frontend
     restart: unless-stopped
+    environment:
+      INACTIVITY_TIMEOUT_MINUTES: "120"
+      INACTIVITY_WARNING_MINUTES: "15"
     depends_on:
       - recipe-platform
     networks:

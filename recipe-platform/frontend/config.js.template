@@ -1,0 +1,4 @@
+window.APP_CONFIG = {
+    inactivityTimeoutMinutes: "${INACTIVITY_TIMEOUT_MINUTES}",
+    inactivityWarningMinutes: "${INACTIVITY_WARNING_MINUTES}",
+};

@@ -524,3 +524,7 @@ button {
 #delete-popup-confirm {
     background: #c62828;
 }
+
+#inactivity-logout {
+    background: #c62828;
+}

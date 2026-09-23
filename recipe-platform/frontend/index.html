@@ -223,6 +223,29 @@
         </div>
     </div>
 
+    <div id="inactivity-popup" class="error-popup" hidden>
+        <div class="error-popup-content">
+            <h2>Session Expiring</h2>
+
+            <p id="inactivity-warning-message">
+                Your session will expire in 15 minutes due to inactivity.
+            </p>
+
+            <p>
+                Do you want to continue?
+            </p>
+
+            <button type="button" id="inactivity-continue">
+                Yes, Continue
+            </button>
+
+            <button type="button" id="inactivity-logout">
+                No, Log Out
+            </button>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
     <script src="app.js"></script>
 
 </body>

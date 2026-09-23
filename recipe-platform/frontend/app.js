@@ -11,12 +11,113 @@ let savedCriteria = {
     servings: 2,
     diet: "",
     cuisine: "",
+};
+
+const INACTIVITY_TIMEOUT =
+    Number(window.APP_CONFIG.inactivityTimeoutMinutes) * 60 * 1000;
+const INACTIVITY_WARNING =
+    Number(window.APP_CONFIG.inactivityWarningMinutes) * 60 * 1000;
+
+let inactivityTimer = null;
+let inactivityWarningTimer = null;
+let lastActivityAt = null;
+let lastActivityRecordedAt = 0;
+const ACTIVITY_THROTTLE = 5000;
+
+function recordActivity() {
+    lastActivityAt = Date.now();
+}
+
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    clearTimeout(inactivityWarningTimer);
+
+    inactivityWarningTimer = setTimeout(
+        showInactivityWarning,
+        INACTIVITY_TIMEOUT - INACTIVITY_WARNING
+    );
+
+    inactivityTimer = setTimeout(
+        handleInactivityTimeout,
+        INACTIVITY_TIMEOUT
+    );
+}
+
+["click", "keydown", "touchstart", "scroll", "mousemove"].forEach(function (eventType) {
+    document.addEventListener(eventType, function () {
+        if (!appView.hidden && inactivityPopup.hidden) {
+            const now = Date.now();
+
+            if (
+                eventType === "scroll" ||
+                eventType === "mousemove"
+            ) {
+                if (now - lastActivityRecordedAt < ACTIVITY_THROTTLE) {
+                    return;
+                }
+            }
+
+            lastActivityRecordedAt = now;
+            recordActivity();
+            resetInactivityTimer();
+        }
+    });
+});
+
+function showInactivityWarning() {
+    const warningMessage =
+        document.getElementById("inactivity-warning-message");
+
+    warningMessage.textContent =
+        `Your session will expire in ${window.APP_CONFIG.inactivityWarningMinutes} minutes due to inactivity!`;
+
+    inactivityPopup.hidden = false;
+}
+
+function saveAppState() {
+    const state = {
+        selectedRecipeId,
+        request: requestInput.value,
+        servings: servingsSelect.value,
+        diet: dietSelect.value,
+        cuisine: cuisineSelect.value,
+        savedCriteria,
+    };
+
+    sessionStorage.setItem(
+        "recipe_restore_state",
+        JSON.stringify(state)
+    );
+}
+
+async function handleInactivityTimeout() {
+    inactivityPopup.hidden = true;
+
+    saveAppState();
+
+    await revokeRefreshSession();
+
+    clearSession();
+
 }
 
 const errorPopup = document.getElementById("error-popup");
 const errorPopupMessage = document.getElementById("error-popup-message");
 const errorPopupOk = document.getElementById("error-popup-ok");
 
+const inactivityPopup = document.getElementById("inactivity-popup");
+const inactivityContinue = document.getElementById("inactivity-continue");
+const inactivityLogout = document.getElementById("inactivity-logout");
+
+inactivityContinue.addEventListener("click", function () {
+    inactivityPopup.hidden = true;
+    resetInactivityTimer();
+});
+
+inactivityLogout.addEventListener("click", function () {
+    inactivityPopup.hidden = true;
+    logout();
+});
 
 errorPopupOk.addEventListener("click", function() {
     errorPopup.hidden = true;
@@ -72,22 +173,92 @@ const loginMessage = document.getElementById("login-message");
 
 const loginView = document.getElementById("login-view");
 const appView = document.getElementById("app-view");
-const logoutButton = document.getElementById("logout-button")
+const logoutButton = document.getElementById("logout-button");
 
 
 function clearSession() {
     sessionStorage.removeItem("access_token");
     sessionStorage.removeItem("refresh_token");
 
+    clearTimeout(inactivityTimer);
+    clearTimeout(inactivityWarningTimer);
+
+    inactivityPopup.hidden = true;
+
+    loginEmail.value = "";
+    loginPassword.value = "";
+
     loginView.hidden = false;
     appView.hidden = true;
 }
 
 function handleSessionExpired() {
+    clearSavedAppState();
     clearSession();
 }
 
-function logout() {
+function clearSavedAppState() {
+    sessionStorage.removeItem("recipe_restore_state");
+}
+
+function getSavedAppState() {
+    const savedState = sessionStorage.getItem("recipe_restore_state");
+
+    if (!savedState) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(savedState);
+    } catch (error) {
+        console.error("Saved application state is invalid:", error);
+        clearSavedAppState();
+        return null;
+    }
+}
+
+function restoreAppState(savedState) {
+    requestInput.value = savedState.request || "";
+    servingsSelect.value = savedState.servings;
+    dietSelect.value = savedState.diet || "";
+    cuisineSelect.value = savedState.cuisine || "";
+
+    savedCriteria = savedState.savedCriteria;
+
+    updateGenerateButton();
+
+    clearSavedAppState();
+}
+
+async function revokeRefreshSession() {
+    const refreshToken = sessionStorage.getItem("refresh_token");
+
+    if (!refreshToken) {
+        return;
+    }
+
+    try {
+        await fetch(
+            "/users/logout",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    refresh_token: refreshToken,
+                }),
+            }
+        );
+    } catch (error) {
+        console.error("Session revocation request failed:", error);
+    }
+}
+
+async function logout() {
+    await revokeRefreshSession();
+
+    clearSavedAppState();
     clearSession();
 }
 
@@ -230,10 +401,22 @@ loginForm.addEventListener("submit", async function (event) {
             data.refresh_token,
         );
 
+        const savedState = getSavedAppState();
+
+        if (savedState) {
+            selectedRecipeId = savedState.selectedRecipeId;
+        }
+
         loginView.hidden = true;
         appView.hidden = false;
 
+        resetInactivityTimer();
+
         await loadRecipes();
+
+        if (savedState) {
+            restoreAppState(savedState);
+        }
 
     } catch (error) {
         console.error(error);
@@ -833,6 +1016,8 @@ async function loadRecipes() {
                 recipeItem.scrollIntoView({
                     block: "nearest"
                 });
+
+                displayRecipes(recipe);
             }
 
             recipeItem.addEventListener("click", function () {
@@ -869,6 +1054,9 @@ async function restoreSession() {
         if (loaded === true) {
             loginView.hidden = true;
             appView.hidden = false;
+
+            resetInactivityTimer();
+
             document.body.classList.remove("auth-checking");
             return;
         }
