@@ -11,7 +11,7 @@ from app.database import get_db
 from app.models import User
 from app.schemas import (
     RecipeGenerateRequest,
-    RecipeRegenerateRequest,
+    RecipeRefineRequest,
     RecipeResponse,
 )
 from app.services.recipe_service import (
@@ -20,7 +20,7 @@ from app.services.recipe_service import (
     get_recipe_image_service,
     get_user_recipes,
     get_user_recipe,
-    regenerate_recipe_service,
+    refine_recipe_service,
 )
 from app.services.pdf_service import create_recipe_pdf
 
@@ -50,6 +50,29 @@ def generate_recipe(
         current_user.id,
         data,
     )
+
+
+@router.post("/{recipe_id}/refine", response_model=RecipeResponse)
+def refine_recipe(
+    recipe_id: int,
+    data: RecipeRefineRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    recipe = refine_recipe_service(
+        db,
+        current_user.id,
+        recipe_id,
+        data,
+    )
+
+    if recipe is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Recipe not found",
+        )
+
+    return recipe
 
 
 @router.get("/{recipe_id}", response_model=RecipeResponse)
@@ -135,29 +158,6 @@ def get_recipe_pdf(
         content=pdf_bytes,
         media_type="application/pdf",
     )
-
-
-@router.put("/{recipe_id}", response_model=RecipeResponse)
-def update_recipe(
-    recipe_id: int,
-    data: RecipeRegenerateRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    recipe = regenerate_recipe_service(
-        db,
-        current_user.id,
-        recipe_id,
-        data,
-    )
-
-    if recipe is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Recipe not found",
-        )
-
-    return recipe
 
 
 @router.delete("/{recipe_id}", status_code=204)

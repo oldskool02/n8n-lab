@@ -99,8 +99,6 @@ class Recipe(Base):
     title: Mapped[str] = mapped_column(String(200))
     servings: Mapped[int]
     diet = Column(String(100), nullable=True)
-    cuisine = Column(String(100), nullable=True)
-
     image_file_id: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,

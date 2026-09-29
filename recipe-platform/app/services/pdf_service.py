@@ -140,10 +140,6 @@ def create_recipe_pdf(recipe, image_bytes=None):
                     f"<b>Diet:</b><br/>{escape(str(recipe.diet or 'None'))}",
                     metadata_style,
                 ),
-                Paragraph(
-                    f"<b>Cuisine:</b><br/>{escape(str(recipe.cuisine or 'None'))}",
-                    metadata_style,
-                ),
             ]
         ],
         colWidths=[55 * mm, 55 * mm, 55 * mm],

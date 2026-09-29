@@ -1,17 +1,10 @@
-const servingsSelect = document.getElementById("servings");
-const dietSelect = document.getElementById("diet");
-const cuisineSelect = document.getElementById("cuisine");
 const generateForm = document.getElementById("generate-form");
 const requestInput = document.getElementById("request");
 const validationMessage = document.getElementById("validation-message");
 const generateButton = document.getElementById("generate-button");
+const newRecipeButton = document.getElementById("new-recipe-button");
 
 let selectedRecipeId = null;
-let savedCriteria = {
-    servings: 2,
-    diet: "",
-    cuisine: "",
-};
 
 const INACTIVITY_TIMEOUT =
     Number(window.APP_CONFIG.inactivityTimeoutMinutes) * 60 * 1000;
@@ -78,10 +71,6 @@ function saveAppState() {
     const state = {
         selectedRecipeId,
         request: requestInput.value,
-        servings: servingsSelect.value,
-        diet: dietSelect.value,
-        cuisine: cuisineSelect.value,
-        savedCriteria,
     };
 
     sessionStorage.setItem(
@@ -123,22 +112,10 @@ errorPopupOk.addEventListener("click", function() {
     errorPopup.hidden = true;
 });
 
-function criteriaChanged() {
-    return (
-        Number(servingsSelect.value) !== savedCriteria.servings ||
-        dietSelect.value !== savedCriteria.diet ||
-        cuisineSelect.value !== savedCriteria.cuisine
-    );
-}
-
-function startNewGeneration() {
+function startNewRecipe() {
     selectedRecipeId = null;
 
     generateForm.reset();
-
-    servingsSelect.value = "2";
-    dietSelect.value = "";
-    cuisineSelect.value = "";
 
     validationMessage.textContent = "";
 
@@ -156,8 +133,13 @@ function startNewGeneration() {
     `;
 
     updateGenerateButton();
+    updateRequestInput();
 
 }
+
+newRecipeButton.addEventListener("click", function () {
+    startNewRecipe();
+});
 
 function showErrorPopup(message) {
     errorPopupMessage.textContent = message;
@@ -219,13 +201,9 @@ function getSavedAppState() {
 
 function restoreAppState(savedState) {
     requestInput.value = savedState.request || "";
-    servingsSelect.value = savedState.servings;
-    dietSelect.value = savedState.diet || "";
-    cuisineSelect.value = savedState.cuisine || "";
-
-    savedCriteria = savedState.savedCriteria;
 
     updateGenerateButton();
+    updateRequestInput();
 
     clearSavedAppState();
 }
@@ -429,102 +407,33 @@ loginForm.addEventListener("submit", async function (event) {
 });
 
 /*
- * Servings
- */
-
-for (let servings = 1; servings <= 100; servings++) {
-    const option = document.createElement("option");
-
-    option.value = servings;
-    option.textContent = servings;
-
-    if (servings === 2) {
-        option.selected = true;
-    }
-
-    servingsSelect.appendChild(option);
-}
-
-
-/*
- * Diet options
- */
-
-const diets = [
-    "None",
-    "Vegetarian",
-    "Vegan",
-    "Gluten-Free",
-    "Dairy-Free",
-];
-
-for (const diet of diets) {
-    const option = document.createElement("option");
-
-    option.value = diet === "None" ? "" : diet;
-    option.textContent = diet;
-
-    dietSelect.appendChild(option);
-}
-
-
-/*
- * Cuisine options
- */
-
-const cuisines = [
-    "None",
-    "Italian",
-    "French",
-    "Indian",
-    "Chinese",
-    "Mexican",
-    "Thai",
-    "Mediterranean",
-];
-
-for (const cuisine of cuisines) {
-    const option = document.createElement("option");
-
-    option.value = cuisine === "None" ? "" : cuisine;
-    option.textContent = cuisine;
-
-    cuisineSelect.appendChild(option);
-}
-
-
-/*
  * Basic recipe request validation
  */
 
 generateForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
-    const isRegeneration =
-        selectedRecipeId !== null && criteriaChanged();
-
     validationMessage.textContent = "";
     validationMessage.style.color = "";
 
     const request = requestInput.value.trim();
-    const servings = Number(servingsSelect.value);
 
-    if (!isRegeneration && request.length < 6) {
+    const isRefinement = selectedRecipeId !== null;
+
+    const endpoint = isRefinement
+        ? `/recipes/${selectedRecipeId}/refine`
+        : "/recipes/generate";
+
+    const actionText = isRefinement
+        ? "Refining Recipe..."
+        : "Generating Recipe...";
+
+    if (!request) {
         showErrorPopup(
-            "Please enter a recipe request that is at least 6 characters"
+            "Please enter a recipe request."
         );
 
         requestInput.focus();
-
-        return;
-    }
-
-    if (servings < 1 || servings > 100) {
-        validationMessage.textContent =
-            "Servings must be between 1 and 100.";
-
-        validationMessage.style.color = "red";
-        servingsSelect.focus();
 
         return;
     }
@@ -543,42 +452,29 @@ generateForm.addEventListener("submit", async function (event) {
     generateButton.disabled = true;
 
     validationMessage.textContent =
-        isRegeneration
-            ? "Regenerating recipe..."
-            : "Generating recipe...";
+        actionText;
 
     validationMessage.style.color = "green";
 
     try {
         const response = await authenticatedFetch(
-            isRegeneration
-                ? `/recipes/${selectedRecipeId}`
-                : "/recipes/generate",
+            endpoint,
             {
-                method: isRegeneration ?"PUT" : "POST",
+                method: "POST",
                 headers: {
                     "Authorization": `Bearer ${accessToken}`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(
-                    isRegeneration
-                        ? {
-                            servings: servings,
-                            diet: dietSelect.value || null,
-                            cuisine: cuisineSelect.value || null,
-                        }
-                        : {
-                            request: request,
-                            servings: servings,
-                            diet: dietSelect.value || null,
-                            cuisine: cuisineSelect.value || null,
-                        }
-                ),
+                body: JSON.stringify({
+                    request: request,
+                }),
             }
         );
 
         if (!response.ok) {
-            let message = "Could not generate the recipe.";
+            let message = isRefinement
+                ? "Could not refine the recipe."
+                : "Could not generate the recipe.";
 
             try {
                 const errorData = await response.json();
@@ -592,13 +488,7 @@ generateForm.addEventListener("submit", async function (event) {
 
             validationMessage.textContent = message;
             validationMessage.style.color = "red";
-            if (!isRegeneration) {
-                generateForm.reset();
 
-                servingsSelect.value = 2;
-                dietSelect.value = "";
-                cuisineSelect.value = "";
-            }
             return;
         }
 
@@ -607,70 +497,67 @@ generateForm.addEventListener("submit", async function (event) {
         console.log("Generated recipe:", recipe);
 
         selectedRecipeId = recipe.id;
+        saveAppState();
 
         displayRecipes(recipe);
 
         try {
             await loadRecipes();
         } catch (error) {
-            console.error("Loading My Recipes failed", error)
+            console.error("Loading My Recipes failed", error);
         }
 
         requestInput.value = "";
 
         validationMessage.textContent =
-            isRegeneration
-                ? "Recipe regenerated successfully."
-                : "Recipe generated successfully."
+            isRefinement
+                ? "Recipe refined successfully."
+                : "Recipe generated successfully.";
 
         validationMessage.style.color = "green";
 
     } catch (error) {
-        console.error("Recipe generation failed:", error);
+        console.error(
+            isRefinement
+                ? "Recipe refinement failed:"
+                : "Recipe generation failed:",
+            error
+        );
 
-        validationMessage.textContent = "Could not connect to the server.";
+        validationMessage.textContent =
+            isRefinement
+                ? "Could not connect to the server while refining the recipe."
+                : "Could not connect to the server while generating the recipe.";
+
         validationMessage.style.color = "red";
+
     } finally {
         updateGenerateButton();
     }
 
 });
 
-generateButton.addEventListener("click", function(event) {
-    if (selectedRecipeId !== null && !criteriaChanged()) {
-        event.preventDefault();
-        startNewGeneration();
-    }
-});
-
 function updateGenerateButton() {
     if (selectedRecipeId === null) {
         generateButton.textContent = "Generate";
-        generateButton.disabled = requestInput.value.trim().length < 6;
+        generateButton.disabled = !requestInput.value.trim();
         return;
     }
 
-    if (criteriaChanged()) {
-        generateButton.textContent = "Regenerate";
-        generateButton.disabled = false;
-    } else {
-        generateButton.textContent = "New Generation";
-        generateButton.disabled = false;
-    }
+    generateButton.textContent = "Refine";
+    generateButton.disabled = !requestInput.value.trim();
 }
 
-servingsSelect.addEventListener("change", updateGenerateButton);
-dietSelect.addEventListener("change", updateGenerateButton);
-cuisineSelect.addEventListener("change", updateGenerateButton);
-
-requestInput.addEventListener("input", function () {
-    const request = requestInput.value.trim();
-
-    if (selectedRecipeId !== null && request) {
-        startNewGeneration();
-        requestInput.value = request;
+function updateRequestInput() {
+    if (selectedRecipeId === null) {
+        requestInput.placeholder = "What would you like to cook?";
+        return;
     }
 
+    requestInput.placeholder = "Would you like to refine the recipe? Example: servings, diet?";
+}
+
+requestInput.addEventListener("input", function () {
     updateGenerateButton();
 });
 
@@ -717,18 +604,6 @@ function displayRecipes(recipe) {
     const recipeView = document.getElementById("recipe-view");
 
     selectedRecipeId = recipe.id;
-
-    savedCriteria = {
-        servings: recipe.servings,
-        diet: recipe.diet || "",
-        cuisine: recipe.cuisine || "",
-    }
-
-    servingsSelect.value = String(recipe.servings);
-    dietSelect.value = recipe.diet || "";
-    cuisineSelect.value = recipe.cuisine || "";
-
-    generateButton.textContent = "New Generation";
 
     recipeView.innerHTML = "";
 
@@ -878,6 +753,9 @@ function displayRecipes(recipe) {
             deletePopupCancel.focus();
     });
 
+    updateGenerateButton();
+    updateRequestInput();
+
 }
 
 document
@@ -927,17 +805,6 @@ document
             selectedRecipeId = null;
 
             generateForm.reset();
-
-            servingsSelect.value = 2;
-
-            dietSelect.value = "";
-            cuisineSelect.value = "";
-
-            savedCriteria = {
-                servings: 2,
-                diet: "",
-                cuisine: "",
-            };
 
             recipeView.innerHTML = `
                 <div class="empty-state">
@@ -1022,6 +889,7 @@ async function loadRecipes() {
 
             recipeItem.addEventListener("click", function () {
                 selectedRecipeId = recipe.id;
+                saveAppState();
                 requestInput.value = "";
 
                 document
@@ -1049,6 +917,12 @@ async function restoreSession() {
     const accessToken = sessionStorage.getItem("access_token");
 
     if (accessToken) {
+        const savedState = getSavedAppState();
+
+        if (savedState) {
+            selectedRecipeId = savedState.selectedRecipeId;
+        }
+
         const loaded = await loadRecipes();
 
         if (loaded === true) {
@@ -1056,6 +930,10 @@ async function restoreSession() {
             appView.hidden = false;
 
             resetInactivityTimer();
+
+            if (savedState) {
+                restoreAppState(savedState);
+            }
 
             document.body.classList.remove("auth-checking");
             return;

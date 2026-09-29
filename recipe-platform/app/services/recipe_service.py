@@ -14,13 +14,13 @@ from app.models import (
 
 from app.schemas import (
     GeneratedImage,
-    RecipeUpdate,
+    GeneratedRecipe,
     RecipeGenerateRequest,
     RecipeGenerationRequest,
     RecipeGenerationResponse,
-    RecipeRegenerateRequest,
-    RecipeRegenerationRequest,
-    RecipeRegenerationResponse,
+    RecipeRefinePayload,
+    RecipeRefineRequest,
+    RecipeRefineResponse,
 )
 from app.config import N8N_INTERNAL_KEY
 from app.exceptions import (
@@ -30,11 +30,11 @@ from app.exceptions import (
 )
 
 
-def regenerate_recipe_service(
+def refine_recipe_service(
     db: Session,
     user_id: int,
     recipe_id: int,
-    data: RecipeRegenerateRequest,
+    data: RecipeRefineRequest,
 ):
     recipe = get_user_recipe(
         db,
@@ -45,15 +45,13 @@ def regenerate_recipe_service(
     if recipe is None:
         return None
 
-    regeneration_request_id = uuid4()
-
-    regeneration_request = RecipeRegenerationRequest(
-        request_id=regeneration_request_id,
-        title=recipe.title,
-        current_recipe={
-            "title": recipe.title,
-            "servings": recipe.servings,
-            "ingredients": [
+    refine_request = RecipeRefinePayload(
+        request=data.request,
+        current_recipe=GeneratedRecipe(
+            title=recipe.title,
+            servings=recipe.servings,
+            diet=recipe.diet,
+            ingredients=[
                 {
                     "quantity": item.quantity,
                     "unit": item.unit,
@@ -61,26 +59,23 @@ def regenerate_recipe_service(
                 }
                 for item in recipe.ingredients
             ],
-            "steps": [
+            steps=[
                 {
                     "step_number": item.step_number,
                     "instruction": item.instruction,
                 }
                 for item in recipe.steps
             ],
-        },
-        servings=data.servings,
-        diet=data.diet,
-        cuisine=data.cuisine,
+        ),
     )
 
     try:
         response_data = httpx.post(
-            "http://n8n:5678/webhook/recipe-regeneration",
+            "http://n8n:5678/webhook/recipe-refinement",
             headers={
                 "X-Recipe-Platform-Key": N8N_INTERNAL_KEY,
             },
-            json=regeneration_request.model_dump(mode="json"),
+            json=refine_request.model_dump(mode="json"),
             timeout=60,
         )
     except httpx.RequestError as exc:
@@ -102,33 +97,23 @@ def regenerate_recipe_service(
         ) from exc
 
     try:
-        regeneration_response = RecipeRegenerationResponse.model_validate(
+        refine_response = RecipeRefineResponse.model_validate(
             response_data,
         )
 
     except ValidationError as exc:
         raise RecipeFatalError(
-            "n8n returned an invalid recipe regeneration response"
+            "n8n returned an invalid recipe refinement response"
         ) from exc
 
-    if regeneration_response.request_id != regeneration_request_id:
-        raise RecipeFatalError(
-            "n8n returned a different request_id"
-        )
-
-    if regeneration_response.recipe.servings != data.servings:
-        raise RecipeFatalError(
-            "n8n returned different servings than requested"
-        )
-
-    recipe.servings = regeneration_response.recipe.servings
+    recipe.servings = refine_response.recipe.servings
+    recipe.title = refine_response.recipe.title
     recipe.is_user_modified = True
-    recipe.diet = data.diet
-    recipe.cuisine = data.cuisine
+    recipe.diet = refine_response.recipe.diet
 
     recipe.ingredients.clear()
 
-    for item in regeneration_response.recipe.ingredients:
+    for item in refine_response.recipe.ingredients:
         ingredient = RecipeIngredient(
             quantity=item.quantity,
             unit=item.unit,
@@ -139,7 +124,7 @@ def regenerate_recipe_service(
 
     recipe.steps.clear()
 
-    for item in regeneration_response.recipe.steps:
+    for item in refine_response.recipe.steps:
         step = RecipeStep(
             step_number=item.step_number,
             instruction=item.instruction,
@@ -186,10 +171,6 @@ def generate_recipe_service(
     generation_request = RecipeGenerationRequest(
         request_id=request_id,
         request=data.request,
-        servings=data.servings,
-        diet=data.diet,
-        cuisine=data.cuisine,
-        generate_image=False,
     )
 
     try:
@@ -235,14 +216,15 @@ def generate_recipe_service(
             "n8n returned a different request_id"
         )
 
-    if generation_response.recipe.servings != data.servings:
-        raise RecipeFatalError(
-            "n8n returned different servings than requested"
-        )
-
     if not generation_response.is_recipe_request:
         raise RecipeInvalidRequestError(
-            "This is a Recipe Generator. Please specify a meal/main ingredient you want the recipe for."
+            "This is a Recipe Generator. This request is not related to creating a recipe!"
+        )
+
+    if generation_response.needs_clarification:
+        raise RecipeInvalidRequestError(
+            generation_response.clarification_message
+            or "Please provide a little more detail about the recipe you'd like to create!"
         )
 
     recipe = _create_generated_recipe(
@@ -260,7 +242,6 @@ def generate_recipe_service(
             json={
                 "title": recipe.title,
                 "diet": recipe.diet,
-                "cuisine": recipe.cuisine,
             },
             timeout=60,
         )
@@ -312,56 +293,6 @@ def get_user_recipe(
     result = db.execute(statement)
 
     return result.scalar_one_or_none()
-
-
-def update_recipe_service(
-    db: Session,
-    user_id: int,
-    recipe_id: int,
-    data: RecipeUpdate,
-):
-    recipe = get_user_recipe(
-        db,
-        user_id,
-        recipe_id,
-    )
-
-    if recipe is None:
-        return None
-
-    recipe.servings = data.servings
-    recipe.is_user_modified = True
-
-    recipe.ingredients.clear()
-
-    for item in data.ingredients:
-        ingredient = RecipeIngredient(
-            quantity=item.quantity,
-            unit=item.unit,
-            ingredient=item.ingredient,
-        )
-
-        recipe.ingredients.append(ingredient)
-
-    recipe.steps.clear()
-
-    for item in data.steps:
-        step = RecipeStep(
-            step_number=item.step_number,
-            instruction=item.instruction,
-        )
-
-        recipe.steps.append(step)
-
-    try:
-        db.commit()
-        db.refresh(recipe)
-
-    except Exception:
-        db.rollback()
-        raise
-
-    return recipe
 
 
 def delete_recipe_service(
@@ -420,9 +351,8 @@ def _create_generated_recipe(
         generation_request_id=generation_response.request_id,
         title=generation_response.recipe.title,
         servings=generation_response.recipe.servings,
-        diet = generation_response.criteria.diet,
-        cuisine = generation_response.criteria.cuisine,
-        image_file_id = generation_response.image.file_id,
+        diet = generation_response.recipe.diet,
+        image_file_id = None,
     )
 
     for item in generation_response.recipe.ingredients:

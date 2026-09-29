@@ -65,7 +65,6 @@ class RecipeResponse(BaseModel):
     title: str
     servings: int
     diet: str | None
-    cuisine: str | None
     image_file_id: str | None
     is_user_modified: bool
 
@@ -74,54 +73,27 @@ class RecipeResponse(BaseModel):
 
 
 class RecipeGenerateRequest(BaseModel):
-    request: str = Field(min_length=6)
-    servings: int = Field(gt=0)
-    diet: str | None = None
-    cuisine: str | None = None
+    request: str = Field(min_length=1)
 
     @field_validator("request", mode="before")
     @classmethod
     def validate_request(cls, value: str) -> str:
         value = value.strip()
 
-        if len(value) < 6:
+        if not value:
             raise ValueError(
-                "Request must be at least 6 characters long"
+                "Please enter a recipe request"
             )
 
         return value
 
 
-class RecipeRegenerateRequest(BaseModel):
-    servings: int = Field(gt=0)
-    diet: str | None = None
-    cuisine: str | None = None
-
-
-class GenerationCriteria(BaseModel):
-    diet: str | None
-    cuisine: str | None
-
-
 class GeneratedRecipe(BaseModel):
     title: str
     servings: int
+    diet: str | None = None
     ingredients: list[RecipeIngredientCreate]
     steps: list[RecipeStepCreate]
-
-
-class RecipeRegenerationRequest(BaseModel):
-    request_id: UUID
-    title: str
-    current_recipe: GeneratedRecipe
-    servings: int
-    diet: str | None = None
-    cuisine: str | None = None
-
-
-class RecipeRegenerationResponse(BaseModel):
-    request_id: UUID
-    recipe: GeneratedRecipe
 
 
 class GeneratedImage(BaseModel):
@@ -131,16 +103,26 @@ class GeneratedImage(BaseModel):
 
 class RecipeGenerationResponse(BaseModel):
     request_id: UUID
-    criteria: GenerationCriteria
     is_recipe_request: bool
-    recipe: GeneratedRecipe
+    needs_clarification: bool
+    clarification_message: str | None = None
+    recipe: GeneratedRecipe | None = None
     image: GeneratedImage
+
+
+class RecipeRefineRequest(BaseModel):
+    request: str = Field(min_length=1)
+
+
+class RecipeRefinePayload(BaseModel):
+    request: str
+    current_recipe: GeneratedRecipe
+
+
+class RecipeRefineResponse(BaseModel):
+    recipe: GeneratedRecipe
 
 
 class RecipeGenerationRequest(BaseModel):
     request_id: UUID
     request: str
-    servings: int
-    diet: str | None = None
-    cuisine: str | None = None
-    generate_image: bool
