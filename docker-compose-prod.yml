@@ -165,14 +165,6 @@ services:
     networks:
       - n8n_internal
 
-  ollama:
-    image: ollama/ollama
-    restart: unless-stopped
-    volumes:
-      - ollama_data:/root/.ollama
-    networks:
-      - n8n_internal
-
   cloudflared:
     image: cloudflare/cloudflared:2024.12.0
     restart: unless-stopped
@@ -189,7 +181,6 @@ volumes:
   postgres_data:
   n8n_data:
   redis_data:
-  ollama_data:
 
 secrets:
   postgres_password:
