@@ -157,10 +157,34 @@ const loginView = document.getElementById("login-view");
 const appView = document.getElementById("app-view");
 const logoutButton = document.getElementById("logout-button");
 
+const accountButton = document.getElementById("account-button");
+const accountPopup = document.getElementById("account-popup");
+const accountEmail = document.getElementById("account-email");
+const accountDeleteButton = document.getElementById("account-delete-button");
+const accountCloseButton = document.getElementById("account-close-button");
+
+const accountDeletePopup = document.getElementById("account-delete-popup");
+const accountDeleteCancel = document.getElementById("account-delete-cancel");
+const accountDeleteConfirm = document.getElementById("account-delete-confirm");
+
+const loginPanel = document.getElementById("login-panel");
+const registerPanel = document.getElementById("register-panel");
+
+const registerForm = document.getElementById("register-form");
+const registerEmail = document.getElementById("register-email");
+const registerPassword = document.getElementById("register-password");
+const registerPasswordConfirm = document.getElementById("register-password-confirm");
+const registerMessage = document.getElementById("register-message");
+
+const showRegisterButton = document.getElementById("show-register-button");
+const showLoginButton = document.getElementById("show-login-button");
+const showRegisterPassword = document.getElementById("show-register-password");
+
 
 function clearSession() {
     sessionStorage.removeItem("access_token");
     sessionStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("account_email");
 
     clearTimeout(inactivityTimer);
     clearTimeout(inactivityWarningTimer);
@@ -324,6 +348,59 @@ async function refreshAccessToken() {
 
 logoutButton.addEventListener("click", logout);
 
+accountButton.addEventListener("click", function () {
+    const email = sessionStorage.getItem("account_email");
+
+    accountEmail.textContent = email || "Email unavailable";
+    accountPopup.hidden = false;
+    accountCloseButton.focus();
+});
+
+accountCloseButton.addEventListener("click", function () {
+    accountPopup.hidden = true;
+});
+
+accountDeleteButton.addEventListener("click", function () {
+    accountPopup.hidden = true;
+    accountDeletePopup.hidden = false;
+    accountDeleteCancel.focus();
+});
+
+accountDeleteCancel.addEventListener("click", function () {
+    accountDeletePopup.hidden = true;
+    accountPopup.hidden = false;
+    accountCloseButton.focus();
+});
+
+accountDeleteConfirm.addEventListener("click", async function () {
+    try {
+        const response = await authenticatedFetch(
+            "/users/me",
+            {
+                method: "DELETE",
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Could not delete account");
+        }
+
+        accountDeletePopup.hidden = true;
+        accountPopup.hidden = true;
+
+        clearSavedAppState();
+        clearSession();
+    } catch (error) {
+        console.error("Account deletion failed:", error);
+
+        accountDeletePopup.hidden = true;
+
+        showErrorPopup(
+            "Could not delete your account. Please try again."
+        );
+    }
+});
+
 /*
 * Show Password
 */
@@ -331,6 +408,47 @@ showPassword.addEventListener("change", function() {
     loginPassword.type = showPassword.checked
         ? "text"
         : "password";
+});
+
+showRegisterButton.addEventListener("click", function() {
+    loginPanel.hidden = true;
+    registerPanel.hidden = false;
+
+    loginMessage.textContent = "";
+    registerMessage.textContent = "";
+
+    registerEmail.value = "";
+    registerPassword.value = "";
+    registerPasswordConfirm.value = "";
+
+    showRegisterPassword.checked = false;
+    registerPassword.type = "password";
+    registerPasswordConfirm.type = "password";
+
+    registerEmail.focus();
+
+});
+
+showLoginButton.addEventListener("click", function() {
+    registerPanel.hidden = true;
+    loginPanel.hidden = false;
+
+    loginMessage.textContent = "";
+    registerMessage.textContent = "";
+
+    showPassword.checked = false;
+    loginPassword.type = "password";
+
+    loginEmail.focus();
+});
+
+showRegisterPassword.addEventListener("change", function() {
+    const passwordType = showRegisterPassword.checked
+        ? "text"
+        : "password";
+
+    registerPassword.type = passwordType;
+    registerPasswordConfirm.type = passwordType;
 });
 
 loginForm.addEventListener("submit", async function (event) {
@@ -379,6 +497,11 @@ loginForm.addEventListener("submit", async function (event) {
             data.refresh_token,
         );
 
+        sessionStorage.setItem(
+            "account_email",
+            email
+        )
+
         const savedState = getSavedAppState();
 
         if (savedState) {
@@ -403,6 +526,77 @@ loginForm.addEventListener("submit", async function (event) {
             "Could not connect to the server.";
 
         loginMessage.style.color = "red";
+    }
+});
+
+registerForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    registerMessage.textContent = "";
+    registerMessage.style.color = "";
+
+    const email = registerEmail.value.trim();
+    const password = registerPassword.value;
+    const passwordConfirm = registerPasswordConfirm.value;
+
+    if (password !== passwordConfirm) {
+        registerMessage.textContent =
+            "Passwords do not match";
+
+        registerMessage.style.color = "red";
+
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            "/users/",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                }),
+            }
+        );
+
+        if (!response.ok) {
+            const data = await response.json();
+
+            registerMessage.textContent =
+                data.detail || "Could not create account.";
+
+            registerMessage.style.color = "red";
+
+            return;
+        }
+
+        loginPanel.hidden = false;
+        registerPanel.hidden = true;
+
+        loginEmail.value = email;
+        loginPassword.value = "";
+
+        showPassword.checked = false;
+        loginPassword.type = "password";
+
+        registerForm.reset();
+
+        registerMessage.textContent =
+            "Account created successfully. Please log in.";
+
+        registerMessage.style.color = "green";
+
+    } catch (error) {
+        console.error(error);
+
+        registerMessage.textContent =
+            "Could not connect to the server.";
+
+        registerMessage.style.color = "red";
     }
 });
 

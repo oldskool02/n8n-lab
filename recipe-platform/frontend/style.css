@@ -331,6 +331,32 @@ button {
     min-height: 20px;
 }
 
+#login-form > button,
+#register-form > button {
+    background: #8b5e3c;
+    color: #ffffff;
+}
+
+.auth-switch {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.auth-switch button {
+    display: inline;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    color: #8b5e3c;
+    border: 0;
+    border-radius: 0;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 .show-password {
     display: flex;
     align-items: center;

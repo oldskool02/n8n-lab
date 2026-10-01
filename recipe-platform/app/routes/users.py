@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.auth import get_current_user
 from app.database import get_db
 from app.schemas import (
     UserCreate,
@@ -11,6 +12,7 @@ from app.schemas import (
 from app.services.user_service import (
     authenticate_user_service,
     create_user_service,
+    delete_user_service,
 )
 from app.security import create_access_token
 from app.services.auth_service import (
@@ -106,3 +108,14 @@ def logout(
     return {
         "message": "Successfully logged out",
     }
+
+
+@router.delete("/me", status_code=204)
+def delete_account(
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    delete_user_service(
+        db,
+        current_user,
+    )

@@ -2,6 +2,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import User
+from app.services.recipe_service import (
+    delete_recipe_service,
+    get_user_recipes,
+)
 from app.schemas import UserCreate, UserLogin
 from app.security import hash_password, verify_password
 
@@ -69,3 +73,28 @@ def authenticate_user_service(
         return None
 
     return user
+
+
+def delete_user_service(
+    db: Session,
+    user: User,
+):
+    recipes = get_user_recipes(
+        db,
+        user.id,
+    )
+
+    for recipe in recipes:
+        delete_recipe_service(
+            db,
+            user.id,
+            recipe.id,
+        )
+
+    try:
+        db.delete(user)
+        db.commit()
+
+    except Exception:
+        db.rollback()
+        raise

@@ -16,46 +16,112 @@
 
             <h1>Recipe Generator</h1>
 
-            <form id="login-form">
+            <div id="login-panel">
 
-                <label for="login-email">Email</label>
+                <form id="login-form">
 
-                <input
-                    type="email"
-                    id="login-email"
-                    required
-                    autocomplete="email"
-                >
+                    <label for="login-email">Email</label>
 
-                <label for="login-password">Password</label>
-
-                <input
-                    type="password"
-                    id="login-password"
-                    required
-                    autocomplete="current-password"
-                >
-
-                <label class="show-password">
                     <input
-                        type="checkbox"
-                        id="show-password"
+                        type="email"
+                        id="login-email"
+                        required
+                        autocomplete="email"
                     >
-                    Show Password
-                </label>
 
-                <div id="login-message" class="login-message"></div>
+                    <label for="login-password">Password</label>
 
-                <button type="submit">
-                    Login
-                </button>
+                    <input
+                        type="password"
+                        id="login-password"
+                        required
+                        autocomplete="current-password"
+                    >
 
-            </form>
+                    <label class="show-password">
+                        <input
+                            type="checkbox"
+                            id="show-password"
+                        >
+                        Show Password
+                    </label>
+
+                    <div id="login-message" class="login-message"></div>
+
+                    <button type="submit">
+                        Login
+                    </button>
+
+                </form>
+
+                <div class="auth-switch">
+                    <span>Don't have an account?</span>
+                    <button type="button" id="show-register-button">
+                        Register
+                    </button>
+                </div>
+
+            </div>
+
+            <div id="register-panel" hidden>
+
+                <form id="register-form">
+
+                    <label for="register-email">Email</label>
+
+                    <input
+                        type="email"
+                        id="register-email"
+                        required
+                        autocomplete="email"
+                    >
+
+                    <label for="register-password">Password</label>
+
+                    <input
+                        type="password"
+                        id="register-password"
+                        required
+                        autocomplete="new-password"
+                    >
+
+                    <label for="register-password-confirm">Confirm Password</label>
+
+                    <input
+                        type="password"
+                        id="register-password-confirm"
+                        required
+                        autocomplete="new-password"
+                    >
+
+                    <label class="show-password">
+                        <input
+                            type="checkbox"
+                            id="show-register-password"
+                        >
+                        Show Password
+                    </label>
+
+                    <div id="register-message" class="login-message"></div>
+
+                    <button type="submit">
+                        Create Account
+                    </button>
+
+                </form>
+
+                <div class="auth-switch">
+                    <span>Already have an account?</span>
+                    <button type="button" id="show-login-button">
+                        Login
+                    </button>
+                </div>
+
+            </div>
 
         </div>
 
     </section>
-
 
     <div id="app-view" class="app" hidden>
 
@@ -76,6 +142,10 @@
                     Recipes made with love,<br>
                     just like Ouma.
                 </div>
+
+                <button type="button" id="account-button">
+                    Account
+                </button>
 
                 <button type="button" id="logout-button">
                     Logout
@@ -183,6 +253,48 @@
 
             <button type="button" id="delete-popup-confirm">
                 Delete Recipe
+            </button>
+        </div>
+    </div>
+
+    <div id="account-popup" class="error-popup" hidden>
+        <div class="error-popup-content">
+
+            <h2>My Account</h2>
+
+            <p>
+                <strong>Email</strong>
+                <span id="account-email"></span>
+            </p>
+
+            <button type="button" id="account-delete-button">
+                Delete Account
+            </button>
+
+            <button type="button" id="account-close-button">
+                Close
+            </button>
+
+        </div>
+    </div>
+
+    <div id="account-delete-popup" class="error-popup" hidden>
+        <div class="error-popup-content">
+
+            <h2>Delete Account?</h2>
+
+            <p>
+                Are you sure you want to permanently delete your Account?
+                All of your saved recipes will also be deleted.
+                This action cannot be undone!
+            </p>
+
+            <button type="button" id="account-delete-cancel">
+                Cancel
+            </button>
+
+            <button type="button" id="account-delete-confirm">
+                Delete Account
             </button>
         </div>
     </div>
