@@ -18,6 +18,12 @@ source "$OPS_ROOT/lib/constants.sh"
 # Subsystems
 source "$OPS_ROOT/lib/system.sh"
 source "$OPS_ROOT/lib/docker.sh"
+source "$OPS_ROOT/lib/health.sh"
+source "$OPS_ROOT/lib/recovery.sh"
+source "$OPS_ROOT/lib/backup.sh"
+source "$OPS_ROOT/lib/notify.sh"
+source "$OPS_ROOT/lib/google.sh"
+
 
 command="${1:-help}"
 if (( $# > 0 ));

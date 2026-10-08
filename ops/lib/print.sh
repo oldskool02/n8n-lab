@@ -27,7 +27,7 @@ section() {
     local heading="$1"
 
     newline
-    
+
     print_message "$heading"
     underline "$heading"
 }
@@ -65,7 +65,7 @@ format_message() {
             prefix="${INFO} Info"
             ;;
         error)
-            prefix="${FAIL} ERROR"
+            prefix="${ERROR} Error"
             ;;
         *)
             prefix="$level"

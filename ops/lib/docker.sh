@@ -65,7 +65,7 @@ check_all_services() {
 }
 
 get_service_statuses() {
-    docker compose ps --format json |
+    docker compose -f "$COMPOSE_FILE" ps --format json |
     jq -c '
         {
             Service: .Service,
@@ -82,7 +82,7 @@ show_service_logs() {
   local follow="$2"
   local tail="$3"
 
-  local cmd=(docker compose logs)
+  local cmd=(docker compose -f "$COMPOSE_FILE" logs)
 
   if [[ "$follow" == true ]]
   then

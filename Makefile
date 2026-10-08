@@ -8,7 +8,7 @@ logs:
 	docker compose logs -f
 
 backup:
-	./scripts/backup.sh
+	ops backup
 
 recover:
-	./scripts/full-recovery.sh
+	ops recover
