@@ -169,14 +169,6 @@ services:
     networks:
       - n8n_internal
 
-  ollama:
-    image: ollama/ollama
-    restart: unless-stopped
-    volumes:
-      - ollama_data:/root/.ollama
-    networks:
-      - n8n_internal
-
   cloudflared:
     image: cloudflare/cloudflared:2024.12.0
     restart: unless-stopped
@@ -223,7 +215,6 @@ volumes:
   n8n_data:
   redis_data:
   crm_documents:
-  ollama_data:
   portainer_data:
 
 secrets:

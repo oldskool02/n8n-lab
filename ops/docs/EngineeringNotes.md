@@ -19,10 +19,9 @@ Bad: DB_POSTGRESDB_HOST=172.18.0.2
 | PostgreSQL   | Records Department                           |
 | Redis        | Reception Desk (fast, temporary information) |
 | Cloudflared  | Front Gate                                   |
-| Ollama       | AI Consultant                                |
 | Chat Backend | Customer Service                             |
-| Portainer    | IT Administrator                             |
-| Netdata      | Monitoring & Health                          |
+| Portainer    | IT Administrator (homeserver)                             |
+| Netdata      | Monitoring & Health (homeserver)                          |
 
 The desired state describes what must exist, not the steps required to create it.
 
