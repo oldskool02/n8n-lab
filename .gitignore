@@ -74,6 +74,14 @@ doc-engine/credentials/
 backups/
 *.sql
 n8n_data_backup.tar.gz
+*.dump
+*.dump.gz
+#-------------------
+# Local production recovery material
+#-------------------
+/manual-backups/
+/~docker/
+
 
 #--------------
 # Scripts

@@ -32,18 +32,6 @@ wait_for_service() {
                     return "$EXIT_SUCCESS"
                 fi
                 ;;
-            recipe-platform)
-                if check_recipe_platform
-                then
-                    return "$EXIT_SUCCESS"
-                fi
-                ;;
-            recipe-frontend)
-                if check_recipe_frontend
-                then
-                    return "$EXIT_SUCCESS"
-                fi
-                ;;
             cloudflared)
                 if check_cloudflared
                 then

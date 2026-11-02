@@ -28,31 +28,6 @@ check_n8n_worker() {
     fi
 }
 
-check_recipe_platform() {
-    if docker compose -f "$COMPOSE_FILE" exec -T recipe-frontend \
-        wget -qO- --timeout=5 http://recipe-platform:8000/docs >/dev/null
-    then
-        success "Recipe Platform is healthy"
-        return 0
-    else
-        error "Recipe Platform is unhealthy"
-        return 1
-    fi
-}
-
-
-check_recipe_frontend() {
-    if docker compose -f "$COMPOSE_FILE" exec -T recipe-frontend \
-        wget -qO- --timeout=5 http://127.0.0.1/ >/dev/null
-    then
-        success "Recipe Frontend is healthy"
-        return 0
-    else
-        error "Recipe Frontend is unhealthy"
-        return 1
-    fi
-}
-
 check_cloudflared() {
     local container_status
 
@@ -115,8 +90,6 @@ check_health () {
     check_redis || failed=1
     check_n8n || failed=1
     check_n8n_worker || failed=1
-    check_recipe_platform || failed=1
-    check_recipe_frontend || failed=1
     check_cloudflared || failed=1
 
     return "$failed"

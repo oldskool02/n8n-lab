@@ -25,16 +25,6 @@ run_recover() {
         recover_service "n8n-worker" || failed=1
     fi
 
-    if ! check_recipe_frontend
-    then
-        recover_service "recipe-frontend" || failed=1
-    fi
-
-    if ! check_recipe_platform
-    then
-        recover_service "recipe-platform" || failed=1
-    fi
-
     if ! check_cloudflared
     then
         recover_service "cloudflared" || failed=1

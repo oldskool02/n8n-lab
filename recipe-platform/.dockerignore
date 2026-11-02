@@ -1,8 +1,0 @@
-.venv
-.git
-__pycache__
-.pytest_cache
-*.py[cod]
-.git/
-.gitignore
-.vscode/

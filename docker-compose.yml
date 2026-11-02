@@ -31,7 +31,7 @@ services:
       - n8n_internal
 
   n8n:
-    image: n8nio/n8n:2.31.6
+    image: n8nio/n8n:2.44.7
     user: "node"
     env_file:
       - .env
@@ -55,19 +55,20 @@ services:
       N8N_PROTOCOL: https
       N8N_SECURE_COOKIE: "true"
       NODE_ENV: production
+      GENERIC_TIMEZONE: Africa/Johannesburg
       N8N_COMMUNITY_PACKAGES_ENABLED: "true"
       N8N_CUSTOM_EXTENSIONS: "/home/node/.n8n/custom"
       N8N_ENCRYPTION_KEY_FILE: /run/secrets/n8n_encryption_key
-      N8N_HOST: dev.oldskooln8n.xyz
-      N8N_WEBHOOK_URL: https://dev.oldskooln8n.xyz
-      N8N_EDITOR_BASE_URL: https://dev.oldskooln8n.xyz
-      N8N_PUBLIC_API_BASE_URL: https://dev.oldskooln8n.xyz
+      N8N_HOST: ${N8N_HOST}
+      N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL}
+      N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL}
+      N8N_PUBLIC_API_BASE_URL: ${N8N_PUBLIC_API_BASE_URL}
       N8N_TRUST_PROXY: "true"
       N8N_PROXY_HOPS: "1"
       N8N_CONCURRENCY_PRODUCTION_LIMIT: "2"
       N8N_USER_MANAGEMENT_DISABLED: "false"
       N8N_DIAGNOSTICS_ENABLED: "false"
-      # N8N_RUNNERS_ENABLED: "true"
+      N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
 
       OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS: "true"
 
@@ -77,15 +78,20 @@ services:
       QUEUE_BULL_REDIS_HOST: redis
       QUEUE_BULL_REDIS_PORT: 6379
       QUEUE_HEALTH_CHECK_ACTIVE: "true"
+    secrets:
+      - postgres_password
+      - n8n_encryption_key
+      - google_service_account
     volumes:
       - n8n_data:/home/node/.n8n
       - /opt/n8n-lab/import:/import
-      - /opt/secrets:/run/secrets:ro
     networks:
       - n8n_internal
+      - automation_shared
+      - cloudflare_shared
 
   n8n-worker:
-    image: n8nio/n8n:2.31.6
+    image: n8nio/n8n:2.44.7
     command: worker
     env_file:
       - .env
@@ -108,6 +114,7 @@ services:
       N8N_PROTOCOL: https
       N8N_SECURE_COOKIE: "true"
       NODE_ENV: production
+      GENERIC_TIMEZONE: Africa/Johannesburg
       N8N_COMMUNITY_PACKAGES_ENABLED: "true"
       N8N_CUSTOM_EXTENSIONS: "/home/node/.n8n/custom"
       N8N_ENCRYPTION_KEY_FILE: /run/secrets/n8n_encryption_key
@@ -116,106 +123,45 @@ services:
 
       GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/google_service_account
 
-
       EXECUTIONS_MODE: queue
       QUEUE_BULL_REDIS_HOST: redis
       QUEUE_BULL_REDIS_PORT: 6379
       QUEUE_HEALTH_CHECK_ACTIVE: "true"
-    volumes:
-      - n8n_data:/home/node/.n8n
-      - /opt/secrets:/run/secrets:ro
-    networks:
-      - n8n_internal
-
-  recipe-platform:
-    build: ./recipe-platform
-    command:
-      - uv
-      - run
-      - uvicorn
-      - app.main:app
-      - --host
-      - 0.0.0.0
-      - --port
-      - "8000"
-    restart: unless-stopped
     secrets:
       - postgres_password
-      - jwt_secret
-      - recipe_platform_n8n_key
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: recipe_platform
-      DB_USER: n8n
-      DB_PASSWORD_FILE: /run/secrets/postgres_password
-      JWT_SECRET_KEY_FILE: /run/secrets/jwt_secret
-      JWT_EXPIRE_MINUTES: "120"
-      REFRESH_TOKEN_EXPIRE_DAYS: "30"
-      N8N_INTERNAL_KEY_FILE: /run/secrets/recipe_platform_n8n_key
-    networks:
-      - n8n_internal
-
-  recipe-frontend:
-    build:
-      context: ./recipe-platform
-      dockerfile: Dockerfile.frontend
-    restart: unless-stopped
-    environment:
-      INACTIVITY_TIMEOUT_MINUTES: "120"
-      INACTIVITY_WARNING_MINUTES: "15"
-    depends_on:
-      - recipe-platform
+      - n8n_encryption_key
+      - google_service_account
+    volumes:
+      - n8n_data:/home/node/.n8n
     networks:
       - n8n_internal
 
   cloudflared:
-    image: cloudflare/cloudflared:2024.12.0
+    image: cloudflare/cloudflared:2026.10.5
+    user: "0:0"
     restart: unless-stopped
-    command: tunnel --config /etc/cloudflared/config.yml run
-    volumes:
-      - ./cloudflared:/etc/cloudflared:ro
+    command: tunnel --no-autoupdate run --token-file /run/secrets/cloudflared_token
+    secrets:
+      - cloudflared_token
     networks:
-      - n8n_internal
-
-  portainer:
-    image: portainer/portainer-ce:latest
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:9000:9000"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
-    networks:
-      - n8n_internal
-
-  netdata:
-    image: netdata/netdata:latest
-    restart: unless-stopped
-    hostname: homeserver
-    ports:
-      - "127.0.0.1:19999:19999"
-    cap_add:
-      - SYS_PTRACE
-    security_opt:
-      - apparmor=unconfined
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /etc/os-release:/host/etc/os-release:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - n8n_internal
+      - cloudflare_shared
 
 networks:
   n8n_internal:
+    name: n8n-lab_n8n_internal
+
+  automation_shared:
+    external: true
+    name: automation_shared
+
+  cloudflare_shared:
+    external: true
+    name: cloudflare_shared
 
 volumes:
   postgres_data:
   n8n_data:
   redis_data:
-  crm_documents:
-  portainer_data:
 
 secrets:
   postgres_password:
@@ -230,5 +176,5 @@ secrets:
   jwt_secret:
     file: /opt/secrets/jwt_secret
 
-  recipe_platform_n8n_key:
-    file: /opt/secrets/recipe_platform_n8n_key
+  cloudflared_token:
+    file: /opt/secrets/cloudflared_token

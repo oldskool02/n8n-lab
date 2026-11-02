@@ -8,10 +8,4 @@ ingress:
       httpHostHeader: oldskooln8n.xyz
       noTLSVerify: true
 
-  - hostname: portainer.oldskooln8n.xyz
-    service: http://portainer:9000
-
-  # - hostname: docs.oldskooln8n.xyz
-  #   service: http://doc-engine:8000
-
   - service: http_status:404
